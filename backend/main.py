@@ -36,7 +36,7 @@ def analyze_stock(data: AnalyzeRequest):
 
     aggregated_df = aggregate_data(sentiment_df)
    
-    market_df = market_data(sentiment_df)
+    market_df = market_data(aggregated_df)
 
     normalized_df = normalize_labels(market_df)
 

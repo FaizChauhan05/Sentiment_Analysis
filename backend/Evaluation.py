@@ -12,10 +12,9 @@ def evaluate_predictions(df):
 
     cm = confusion_matrix(y_true, y_pred, labels = ['up', 'down', 'unchanged'])
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['up', 'down', 'unchanged'])
-    disp.plot(cmap=plt.cm.Blues)
+    disp.plot(cmap='Blues')
     plt.title('Confusion Matrix for Stock Movement Prediction')
-    plt.savefig('confusion_matrix.png')
-    plt.close()
+    
     accuracy = (
         (y_true == y_pred).mean()
     ) * 100

@@ -27,6 +27,10 @@ def market_data(df):
             end=end_date,
             interval='1d'
         )
+        print(start_date)
+        print(end_date)
+        print(len(stock_data))
+        print(stock_data[['Close']])
 
         if stock_data.empty:
 
@@ -55,8 +59,8 @@ def market_data(df):
                 previous_close = olhcv_data['Close'].iloc[-2]
                 current_close = olhcv_data['Close'].iloc[-1]
             else:
-                previous_close = olhcv_data['Close'].iloc[-1]
-                current_close = olhcv_data['Close'].iloc[-1]
+                movement.append("No data")
+                return
 
             if current_close > previous_close:
                 movement.append('Stock price went up')
@@ -64,6 +68,7 @@ def market_data(df):
                 movement.append('Stock price went down')
             else:
                 movement.append('Stock price remained unchanged')
+    
             
 
     market_close_hour = 16
@@ -96,7 +101,9 @@ def market_data(df):
 
             target_date = pure_date_est
 
-        start_date = target_date.strftime('%Y-%m-%d')
+        start_date = (
+        target_date - BDay(2)
+        ).strftime('%Y-%m-%d')
 
         end_date = (
             target_date + BDay(1)
@@ -115,6 +122,6 @@ def market_data(df):
     df['Volume'] = Volume
     df['Movement'] = movement
 
-    df = df[df['Movement'] != 'No data']
+    df = df[df['Movement'] != 'No data'].copy()
 
     return df

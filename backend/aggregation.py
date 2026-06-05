@@ -19,7 +19,10 @@ def aggregate_data(df):
     df['Sentiment_Score'] = sentiment_score
     df['Aggregate_Score'] = weighted_score
 
-    df['date'] = pd.to_datetime(df['published_at']).dt.date
+    df['date'] = pd.to_datetime(
+    df['published_at'],
+    utc=True
+)
     aggregated_df = df.groupby(['ticker', 'date'])[['Aggregate_Score']].mean().reset_index()
 
     return aggregated_df

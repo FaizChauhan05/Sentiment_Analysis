@@ -13,9 +13,9 @@ def normalize_labels(df):
     predictions = []
 
     for score in df['Aggregate_Score']:
-        if score > 0.2:
+        if score > 0.3:
             predictions.append('up')
-        elif score < -0.2:
+        elif score < -0.3:
             predictions.append('down')
         else:
             predictions.append('unchanged')

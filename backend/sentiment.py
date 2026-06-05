@@ -35,7 +35,7 @@ def sentiment_analysis(df):
 
             probabilities = F.softmax(logit.logits, dim=1)
 
-            predicted_label = torch.argmax(probabilities).item()
+            predicted_label = int(torch.argmax(probabilities).item())
 
             Sentiment.append(
                 model.config.id2label[predicted_label]
