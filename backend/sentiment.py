@@ -1,8 +1,14 @@
+import os
 import torch
 import pandas as pd
 import torch.nn.functional as F
+import streamlit as st
+from dotenv import load_dotenv
 from transformers import BertTokenizer, BertForSequenceClassification
 
+load_dotenv()
+
+HF_TOKEN = st.secrets.get("HF_TOKEN") or os.getenv("HF_TOKEN")
 
 
 def sentiment_analysis(df):
