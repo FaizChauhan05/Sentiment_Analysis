@@ -5,8 +5,6 @@ from pandas.tseries.offsets import BDay
 
 def market_data(df):
 
-    print(df.columns)
-
     Open = []
     High = []
     Low = []
@@ -27,11 +25,6 @@ def market_data(df):
             end=end_date,
             interval='1d'
         )
-        print(start_date)
-        print(end_date)
-        print(len(stock_data))
-        print(stock_data[['Close']])
-
         if stock_data.empty:
 
             Open.append("No data")

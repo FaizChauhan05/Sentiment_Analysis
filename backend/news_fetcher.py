@@ -48,9 +48,6 @@ def fetch_news(ticker, start_date, end_date):
     }
 
     response = requests.get(url, params=params)
-    print(response.status_code)
-    print(response.json())
-
     data = response.json()
     if data.get("status") == "error":
         raise Exception(data.get("message"))
