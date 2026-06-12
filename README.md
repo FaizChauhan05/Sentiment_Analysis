@@ -1,67 +1,114 @@
-# Financial News Sentiment Analysis & Stock Movement Prediction API
+# SentiCore | Financial News Sentiment Analysis & Stock Movement Prediction
 
-A FastAPI-based machine learning application that analyzes financial news sentiment using FinBERT and evaluates whether sentiment-driven predictions align with actual stock market movements.
+A dual-mode machine learning application featuring an interactive Streamlit analytics dashboard and a FastAPI backend. It analyzes financial news headlines using FinBERT and evaluates whether sentiment-driven predictions align with actual stock market movements.
+
+---
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Key Features](#key-features)
+   - [Interactive Dashboard (SentiCore)](#interactive-dashboard-senticore)
+   - [REST API (FastAPI)](#rest-api-fastapi)
+3. [Architecture & Workflow](#architecture--workflow)
+4. [Tech Stack](#tech-stack)
+5. [Supported Tickers](#supported-tickers)
+6. [System Limitations & Disclaimers](#system-limitations--disclaimers)
+7. [Installation & Setup](#installation--setup)
+8. [Running the Application](#running-the-application)
+9. [API Endpoints](#api-endpoints)
+10. [Sentiment Scoring & Prediction Logic](#sentiment-scoring--prediction-logic)
+11. [License](#license)
+
+---
 
 ## Overview
-
 This project combines Natural Language Processing (NLP) and financial market data to predict stock price direction from news headlines. Financial news articles are collected through NewsAPI, analyzed using FinBERT, aggregated into daily sentiment scores, and compared against real market performance obtained from Yahoo Finance.
 
-The system provides an end-to-end pipeline for sentiment-based stock movement prediction and evaluation.
+It offers:
+1. An **interactive Streamlit Web Dashboard** (SentiCore) to visualize prediction stats, sentiment trends, news mentions, and correlation reports.
+2. A **FastAPI REST API** to execute the pipeline programmatically.
 
-## Features
+---
 
-* Financial news collection using NewsAPI
-* FinBERT-based sentiment analysis
-* Confidence-weighted sentiment scoring
-* Daily sentiment aggregation
-* Historical market data retrieval via Yahoo Finance
-* Stock movement prediction (Up, Down, Unchanged)
-* Prediction accuracy evaluation
-* Confusion matrix generation
-* REST API with FastAPI
+## Key Features
 
-## Tech Stack
+### Interactive Dashboard (SentiCore)
+The Streamlit application includes four main analytical views:
+* **Overview Dashboard**: Displays key metric cards (Accuracy, Total Articles, Correct Predictions, Incorrect Predictions) and lists trending terms/phrases.
+* **Analysis Detail**: Displays a granular data table of fetched headlines, source outlets, model confidence levels, and sentiment labels (with optimized light theme contrast).
+* **Mentions Feed**: Explores headline distributions, sentiment breakdown, and trending keywords.
+* **Reports Page**: Provides dynamic Plotly-powered charts:
+  - **Sentiment Over Time**: Line chart showing aggregate daily sentiment compared with daily stock prices.
+  - **Confusion Matrix**: Visual heatmap evaluating predictions vs. actual stock movements.
+  - **Movement Distribution**: Bar charts showing predictions vs. actual stock price movement counts.
+* **Floating Sidebar Controls**: Date/ticker selection inputs with a persistent, non-softlocking sidebar toggle.
 
-| Category        | Technology                 |
-| --------------- | -------------------------- |
-| Backend         | FastAPI, Python            |
-| NLP Model       | FinBERT (ProsusAI/finbert) |
-| ML Framework    | PyTorch, Transformers      |
-| Data Processing | Pandas                     |
-| Market Data     | Yahoo Finance (yfinance)   |
-| News Source     | NewsAPI                    |
-| Evaluation      | Scikit-learn               |
-| Visualization   | Matplotlib, Seaborn        |
+### REST API (FastAPI)
+* Dynamic news collection from NewsAPI.
+* FinBERT-based sentiment analysis and scoring.
+* Evaluates accuracy metrics and confusion matrices.
+* Returns structured JSON responses.
 
-## Project Workflow
+### Keyword Extraction
+* Custom NLP utility that extracts trending keywords (unigrams) and phrases (bigrams) using stop-word filtering to highlight the most discussed terms in the analysis window.
+
+---
+
+## Architecture & Workflow
 
 ```text
-NewsAPI
-   │
-   ▼
-Fetch Financial Headlines
-   │
-   ▼
-FinBERT Sentiment Analysis
-   │
-   ▼
-Weighted Sentiment Scoring
-   │
-   ▼
-Daily Sentiment Aggregation
-   │
-   ▼
-Yahoo Finance Market Data
-   │
-   ▼
-Stock Movement Prediction
-   │
-   ▼
-Performance Evaluation
+       ┌──────────────────────┐
+       │   Streamlit App      │
+       │  (Frontend UI)       │
+       └──────────┬───────────┘
+                  │
+                  ▼
+       ┌──────────────────────┐
+       │   FastAPI Backend    │
+       │    (REST API)        │
+       └──────────┬───────────┘
+                  │
+        ┌─────────┴─────────┐
+        ▼                   ▼
+┌──────────────┐    ┌──────────────┐
+│   NewsAPI    │    │Yahoo Finance│
+│(Headlines)   │    │ (Market Data)│
+└───────┬──────┘    └───────┬──────┘
+        │                   │
+        ▼                   │
+┌──────────────┐            │
+│   FinBERT    │            │
+│(Sentiment)   │            │
+└───────┬──────┘            │
+        │                   │
+        ▼                   ▼
+┌───────────────────────────┐
+│    Sentiment Scoring      │
+│  & Stock Prediction Logic │
+└──────────────┬────────────┘
+               │
+               ▼
+┌───────────────────────────┐
+│  Performance Evaluation   │
+│ & Visualizations (Plotly) │
+└───────────────────────────┘
 ```
 
-## Supported Tickers
+---
 
+## Tech Stack
+* **Frontend Dashboard**: Streamlit, Plotly
+* **Backend API**: FastAPI, Uvicorn
+* **NLP Model**: FinBERT (`ProsusAI/finbert` via Hugging Face Transformers)
+* **ML Framework**: PyTorch
+* **Data Processing**: Pandas, NumPy
+* **Market Data**: Yahoo Finance (`yfinance`)
+* **News Source**: NewsAPI (`newsapi-python`)
+* **Evaluation**: Scikit-learn
+
+---
+
+## Supported Tickers
 * AAPL (Apple)
 * TSLA (Tesla)
 * NVDA (NVIDIA)
@@ -70,103 +117,83 @@ Performance Evaluation
 * GOOGL (Google)
 * META (Meta)
 * NFLX (Netflix)
-* AMD
-* JPM (JPMorgan)
+* AMD (Advanced Micro Devices)
+* JPM (JPMorgan Chase)
 
-## Installation
+---
+
+## System Limitations & Disclaimers
+* **NewsAPI Constraints**: Due to NewsAPI Free Tier limitations, article fetches are restricted to headlines published within a **30-day window** from today.
+* **Model Constraints**: Because of local hosting costs and model parameter size, FinBERT prediction accuracy and processing latency may vary depending on the total volume of articles collected.
+* **Disclaimer**: This tool is for educational purposes only. Sentiment predictions are not financial advice.
+
+---
+
+## Installation & Setup
 
 ### Clone Repository
-
 ```bash
-git clone https://github.com/your-username/financial-sentiment-analysis.git
-
-cd financial-sentiment-analysis
+git clone https://github.com/FaizChauhan05/Sentiment_Analysis.git
+cd Sentiment_Analysis
 ```
 
 ### Create Virtual Environment
-
 ```bash
 python -m venv venv
 ```
-
-Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-Linux/macOS:
-
-```bash
-source venv/bin/activate
-```
+Activate it:
+* **Windows**: `venv\Scripts\activate`
+* **macOS/Linux**: `source venv/bin/activate`
 
 ### Install Dependencies
-
 ```bash
 pip install -r requirements.txt
 ```
 
-## Environment Variables
-
-Create a `.env` file in the project root:
-
+### Configure Environment Variables
+Create a `.env` file in the root directory:
 ```env
-NEWS_API_KEY=your_newsapi_key
+NEWS_API_KEY=your_newsapi_key_here
 ```
+
+---
 
 ## Running the Application
 
+### 1. Run the FastAPI Backend
+Start the FastAPI server:
 ```bash
-uvicorn main:app --reload
+uvicorn backend.main:app --reload
 ```
+* API Documentation: http://127.0.0.1:8000/docs
+* Health Check: http://127.0.0.1:8000/
 
-Server URL:
-
-```text
-http://127.0.0.1:8000
+### 2. Run the Streamlit Dashboard
+Launch the interactive web UI:
+```bash
+streamlit run streamlit_app.py
 ```
+* Dashboard URL: http://localhost:8501
 
-API Documentation:
-
-```text
-http://127.0.0.1:8000/docs
-```
+---
 
 ## API Endpoints
 
 ### Health Check
+`GET /`
+* **Response**: `{"message": "API is working"}`
 
-```http
-GET /
-```
-
-Response:
-
-```json
-{
-  "message": "API is working"
-}
-```
-
-### Analyze Stock
-
-```http
-POST /analyze
-```
-
-Request Body:
-
+### Analyze Ticker
+`POST /analyze`
+* **Request Body**:
 ```json
 {
   "ticker": "AMD",
-  "start_date": "2026-01-01",
-  "end_date": "2026-02-01"
+  "start_date": "2026-05-15",
+  "end_date": "2026-06-12"
 }
 ```
-
-Example Response:
-
+* **Response**:
 ```json
 {
   "accuracy": 72.5,
@@ -193,50 +220,30 @@ Example Response:
 }
 ```
 
-## Sentiment Scoring
+---
 
+## Sentiment Scoring & Prediction Logic
+
+### Scoring System
 | Sentiment | Score |
 | --------- | ----- |
 | Positive  | +1    |
 | Neutral   | 0     |
 | Negative  | -1    |
 
-Weighted Score:
+Weighted Score calculation:
+$$\text{Weighted Score} = \text{Sentiment Score} \times \text{Confidence}$$
 
-```text
-Weighted Score = Sentiment Score × Confidence
-```
+Daily scores are aggregated by ticker and publication date.
 
-Daily scores are aggregated by ticker and publication date to generate an overall sentiment signal.
+### Prediction Logic
+* **Aggregate Daily Score > 0.3**  $\rightarrow$ **Up**
+* **Aggregate Daily Score < -0.3** $\rightarrow$ **Down**
+* **Otherwise**                    $\rightarrow$ **Unchanged**
 
-## Prediction Logic
+The predicted signal is compared against the actual daily stock close price movement (Yahoo Finance).
 
-```text
-Aggregate Score > 0.3   → Up
-Aggregate Score < -0.3  → Down
-Otherwise               → Unchanged
-```
-
-## Evaluation Metrics
-
-The system evaluates prediction performance using:
-
-* Accuracy
-* Confusion Matrix
-* Correct Predictions
-* Incorrect Predictions
-* Actual Movement Distribution
-* Predicted Movement Distribution
-
-## Future Improvements
-
-* Support additional stock tickers
-* Real-time news streaming
-* Advanced forecasting models
-* Sentiment trend visualization dashboard
-* Multi-day movement prediction
-* Integration with additional financial news sources
+---
 
 ## License
-
 This project is intended for educational and research purposes.
