@@ -2,6 +2,9 @@
 
 A dual-mode machine learning application featuring an interactive Streamlit analytics dashboard and a FastAPI backend. It analyzes financial news headlines using FinBERT and evaluates whether sentiment-driven predictions align with actual stock market movements.
 
+> [!WARNING]
+> **Known Issue / Notice:** The current threshold-based prediction mechanism correlating aggregated sentiment scores to actual stock movement is hardcoded (threshold set at `<-0.3` for bearish and `>0.3` for bullish). This logic is temporary and will be updated soon with a more advanced model.
+
 ---
 
 ## Table of Contents
