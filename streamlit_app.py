@@ -461,22 +461,21 @@ with st.sidebar:
     ticker = st.selectbox("Stock Ticker", TICKERS,
                           format_func=lambda t: TICKER_LABELS[t], index=0)
 
-    default_end   = date.today() - timedelta(days=1)
-    default_start = default_end - timedelta(days=7)
-    start_date = st.date_input("Start Date", value=default_start)
-    end_date   = st.date_input("End Date",   value=default_end)
+    # ── Automated 90-Day GDELT Window ──
+    end_date = date.today()
+    start_date = end_date - timedelta(days=90)
 
-    # NewsAPI free tier and model size disclaimer card
+    # Updated disclaimer card reflecting the GDELT integration
     st.markdown(f"""
     <div style="background:{C['surface_container_lo']}; border: 1px solid {C['outline_variant']};
                 border-radius: 8px; padding: 12px; margin-top: 10px; margin-bottom: 6px;">
         <p style="font-size: 11px; font-weight: 700; color: {C['tertiary']}; margin: 0 0 6px 0;
                   display: flex; align-items: center; gap: 6px; font-family: 'Inter', sans-serif;">
-            {_icon('info', 16, C['tertiary'])} System Limitations
+            {_icon('info', 16, C['tertiary'])} Pipeline Configuration
         </p>
         <ul style="font-size: 11.5px; color: {C['on_surface_variant']}; margin: 0; padding-left: 16px; line-height: 1.4; font-family: 'Inter', sans-serif;">
-            <li style="margin-bottom: 6px;"><strong>API Constraints:</strong> NewsAPI Free Tier limits searches to articles published within <strong>30 days of today</strong> (e.g. from 1 month ago to today/yesterday).</li>
-            <li><strong>Model Performance:</strong> Due to hosting costs and local model size constraints, FinBERT prediction latency and accuracy will vary depending on the volume of headlines collected and processed.</li>
+            <li style="margin-bottom: 6px;"><strong>Automated Window:</strong> Analyzing historical volume from <strong>{start_date.strftime('%Y-%m-%d')}</strong> to <strong>{end_date.strftime('%Y-%m-%d')}</strong> (Rolling 90-Day GDELT Limit).</li>
+            <li><strong>Model Performance:</strong> FinBERT inference is batched. Processing times will vary depending on the historical news volume for the selected ticker.</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -488,7 +487,7 @@ with st.sidebar:
     <div class="info-box">
         <p class="info-title">How it works</p>
         <p class="info-text">
-            1. News headlines fetched via NewsAPI<br>
+            1. News headlines fetched via GDELT / Yahoo Finance<br>
             2. FinBERT classifies each headline<br>
             3. Scores aggregated per trading day<br>
             4. Market data from Yahoo Finance<br>
