@@ -7,7 +7,7 @@ matplotlib.use("Agg")
 import numpy as np
 from datetime import date, timedelta
 
-from backend.news_fetcher import fetch_news
+from backend.gdelt_fetcher import fetch_gdelt_news
 from backend.sentiment import sentiment_analysis
 from backend.market_data import market_data
 from backend.normalize_labels import normalize_labels
@@ -524,7 +524,7 @@ if run_btn:
     bar = st.progress(0, text="Initializing...")
     try:
         bar.progress(10, text="Fetching news articles...")
-        news_df = fetch_news(ticker, str(start_date), str(end_date))
+        news_df = fetch_gdelt_news(ticker, str(start_date), str(end_date))
         if news_df.empty:
             st.error(f"No articles found for {ticker} between {start_date} and {end_date}. "
                      "Try a wider date range or a different ticker.")
