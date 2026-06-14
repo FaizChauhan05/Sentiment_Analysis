@@ -38,6 +38,13 @@ GOOGLE_NEWS_TIMEOUT = 15
 YAHOO_RSS_URL = "https://feeds.finance.yahoo.com/rss/2.0/headline"
 YAHOO_TIMEOUT = 15
 
+BING_NEWS_RSS = "https://www.bing.com/news/search"
+BING_NEWS_TIMEOUT = 15
+
+# Google News caps at ~100 articles per query, so we split the date
+# range into chunks of this many days to multiply coverage.
+GOOGLE_NEWS_CHUNK_DAYS = 30
+
 COMPANY_MAPPING: dict[str, str] = {
     "AAPL":  "Apple",
     "TSLA":  "Tesla",
@@ -213,6 +220,21 @@ def _fetch_google_news_query(query_str: str) -> list[dict]:
     return articles
 
 
+def _date_chunks(
+    start_dt: pd.Timestamp,
+    end_dt: pd.Timestamp,
+    chunk_days: int = GOOGLE_NEWS_CHUNK_DAYS,
+) -> list[tuple[pd.Timestamp, pd.Timestamp]]:
+    """Split a date range into smaller chunks of *chunk_days* each."""
+    chunks: list[tuple[pd.Timestamp, pd.Timestamp]] = []
+    cursor = start_dt
+    while cursor < end_dt:
+        chunk_end = min(cursor + timedelta(days=chunk_days), end_dt)
+        chunks.append((cursor, chunk_end))
+        cursor = chunk_end
+    return chunks
+
+
 def _fetch_from_google_news(
     ticker: str,
     company: str,
@@ -220,33 +242,34 @@ def _fetch_from_google_news(
     end_dt: pd.Timestamp,
 ) -> list[dict]:
     """
-    Run multiple Google News RSS queries with date filtering.
-    Returns raw article dicts in GDELT-compatible shape.
+    Run multiple Google News RSS queries across 30-day date chunks.
+
+    Google News caps at ~100 articles per query regardless of date span.
+    By splitting the 90-day window into 3 × 30-day chunks and running
+    each search term per chunk, we 3× our coverage.
     """
-    start_str = start_dt.strftime("%Y-%m-%d")
-    end_str = end_dt.strftime("%Y-%m-%d")
-    date_filter = f"after:{start_str} before:{end_str}"
-
-    # Build diverse queries for maximum coverage
-    queries: list[str] = []
-
-    # Ticker-based queries
-    queries.append(f"{ticker} {date_filter}")
-
-    # Company + financial terms
+    # Build search terms
+    search_terms: list[str] = [ticker]
     if company.upper() != ticker.upper():
+        search_terms.append(company)
         for suffix in _FINANCIAL_QUERY_SUFFIXES:
-            queries.append(f"{company} {suffix} {date_filter}")
+            search_terms.append(f"{company} {suffix}")
 
+    chunks = _date_chunks(start_dt, end_dt)
     all_articles: list[dict] = []
-    for q in queries:
-        arts = _fetch_google_news_query(q)
-        all_articles.extend(arts)
-        # Small delay to be polite
-        time.sleep(0.5)
+    query_count = 0
 
-    print(f"[Google News] {len(all_articles)} articles from {len(queries)} queries "
-          f"(before dedup)")
+    for chunk_start, chunk_end in chunks:
+        date_filter = (f"after:{chunk_start.strftime('%Y-%m-%d')} "
+                       f"before:{chunk_end.strftime('%Y-%m-%d')}")
+        for term in search_terms:
+            query_count += 1
+            arts = _fetch_google_news_query(f"{term} {date_filter}")
+            all_articles.extend(arts)
+            time.sleep(0.3)  # polite delay
+
+    print(f"[Google News] {len(all_articles)} articles from {query_count} queries "
+          f"({len(chunks)} date chunks × {len(search_terms)} terms)")
     return all_articles
 
 
@@ -293,6 +316,71 @@ def _fetch_from_yahoo_rss(ticker: str) -> list[dict]:
 
     print(f"[Yahoo RSS] {len(articles)} articles")
     return articles
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SOURCE 4: BING NEWS RSS  (supplementary, ~10–15 per query)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _fetch_from_bing_news(
+    ticker: str,
+    company: str,
+) -> list[dict]:
+    """Scrape Bing News RSS for financial headlines."""
+    search_terms: list[str] = [f"{ticker} stock"]
+    if company.upper() != ticker.upper():
+        search_terms.extend([
+            f"{company} stock",
+            f"{company} earnings",
+            f"{company} shares",
+        ])
+
+    headers = {"User-Agent": _USER_AGENT}
+    all_articles: list[dict] = []
+
+    for term in search_terms:
+        params = {"q": term, "format": "rss"}
+        try:
+            resp = requests.get(
+                BING_NEWS_RSS, params=params, headers=headers,
+                timeout=BING_NEWS_TIMEOUT,
+            )
+            resp.raise_for_status()
+        except requests.RequestException as exc:
+            print(f"[Bing News] Error for '{term}': {exc}")
+            continue
+
+        try:
+            root = ElementTree.fromstring(resp.content)
+        except ElementTree.ParseError:
+            continue
+
+        for item in root.iter("item"):
+            title = item.findtext("title", "").strip()
+            link = item.findtext("link", "").strip()
+            pub_date = item.findtext("pubDate", "").strip()
+
+            if not title:
+                continue
+
+            # Bing sometimes includes source in title; clean it
+            source = "Bing News"
+            if " - " in title:
+                parts = title.rsplit(" - ", 1)
+                title = parts[0].strip()
+                source = parts[1].strip()
+
+            all_articles.append({
+                "title":    title,
+                "url":      link,
+                "seendate": pub_date,
+                "domain":   source,
+            })
+
+        time.sleep(0.3)
+
+    print(f"[Bing News] {len(all_articles)} articles from {len(search_terms)} queries")
+    return all_articles
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -389,6 +477,11 @@ def fetch_gdelt_news(ticker: str, start_date: str, end_date: str) -> pd.DataFram
     print(f"[Fetcher] Fetching from Yahoo Finance RSS for {ticker}…")
     yahoo_articles = _fetch_from_yahoo_rss(ticker)
     all_articles.extend(yahoo_articles)
+
+    # ── 4. Bing News RSS (supplementary) ──
+    print(f"[Fetcher] Fetching from Bing News for {ticker}…")
+    bing_articles = _fetch_from_bing_news(ticker, company)
+    all_articles.extend(bing_articles)
 
     # ── Merge, deduplicate, filter ──
     print(f"[Fetcher] Total raw articles (all sources): {len(all_articles)}")
