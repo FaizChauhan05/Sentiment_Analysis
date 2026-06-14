@@ -1,10 +1,3 @@
-"""
-Keyword extraction utility for SentiCore.
-
-Extracts trending keywords from news headlines using TF-IDF weighting
-to surface the most distinctive terms in the current analysis window.
-"""
-
 import re
 from collections import Counter
 from typing import List, Tuple
@@ -37,10 +30,9 @@ _STOP_WORDS = frozenset({
     "trillion", "could", "would", "may", "might", "will",
 })
 
-# Minimum word length to consider
 _MIN_WORD_LEN = 3
 
-# Regex for cleaning tokens
+
 _TOKEN_RE = re.compile(r"[a-zA-Z]+(?:'[a-zA-Z]+)?")
 
 
@@ -48,21 +40,7 @@ def extract_keywords(
     headlines: pd.Series,
     top_n: int = 12,
 ) -> List[Tuple[str, int]]:
-    """
-    Extract the top-N most frequent meaningful keywords from a Series of
-    headline strings.
-
-    Parameters
-    ----------
-    headlines : pd.Series
-        Series of headline text strings.
-    top_n : int
-        Number of top keywords to return.
-
-    Returns
-    -------
-    list of (keyword, count) tuples, sorted by frequency descending.
-    """
+   
     word_counts: Counter = Counter()
 
     for headline in headlines.dropna():
@@ -78,21 +56,7 @@ def extract_bigrams(
     headlines: pd.Series,
     top_n: int = 6,
 ) -> List[Tuple[str, int]]:
-    """
-    Extract the top-N most frequent meaningful bigrams (two-word phrases)
-    from a Series of headline strings.
-
-    Parameters
-    ----------
-    headlines : pd.Series
-        Series of headline text strings.
-    top_n : int
-        Number of top bigrams to return.
-
-    Returns
-    -------
-    list of (bigram_string, count) tuples, sorted by frequency descending.
-    """
+   
     bigram_counts: Counter = Counter()
 
     for headline in headlines.dropna():

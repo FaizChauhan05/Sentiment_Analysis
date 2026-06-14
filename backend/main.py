@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from backend.news_fetcher import fetch_news
+from backend.gdelt_fetcher import fetch_gdelt_news
 from backend.sentiment import sentiment_analysis
 from backend.market_data import market_data
 from backend.normalize_labels import normalize_labels
@@ -21,7 +21,7 @@ class AnalyzeRequest(BaseModel):
 @app.post("/analyze")
 def analyze_stock(data: AnalyzeRequest):
 
-    news_df = fetch_news(
+    news_df = fetch_gdelt_news(
         data.ticker,
         data.start_date,
         data.end_date
