@@ -22,7 +22,7 @@ A dual-mode machine learning application featuring an interactive Streamlit anal
 ---
 
 ## Overview
-This project combines Natural Language Processing (NLP) and financial market data to predict stock price direction from news headlines. Financial news articles are collected through NewsAPI, analyzed using FinBERT, aggregated into daily sentiment scores, and compared against real market performance obtained from Yahoo Finance.
+This project combines Natural Language Processing (NLP) and financial market data to predict stock price direction from news headlines. Financial news articles are collected through a multi-source news aggregator (GDELT 2.0 DOC API, Yahoo Finance, Google News, and Bing News), analyzed using a pre-trained FinBERT model, aggregated into daily sentiment scores, and correlated with real market performance obtained from Yahoo Finance.
 
 It offers:
 1. An **interactive Streamlit Web Dashboard** (SentiCore) to visualize prediction stats, sentiment trends, news mentions, and correlation reports.
@@ -34,23 +34,26 @@ It offers:
 
 ### Interactive Dashboard (SentiCore)
 The Streamlit application includes four main analytical views:
-* **Overview Dashboard**: Displays key metric cards (Accuracy, Total Articles, Correct Predictions, Incorrect Predictions) and lists trending terms/phrases.
-* **Analysis Detail**: Displays a granular data table of fetched headlines, source outlets, model confidence levels, and sentiment labels (with optimized light theme contrast).
-* **Mentions Feed**: Explores headline distributions, sentiment breakdown, and trending keywords.
+* **Overview Dashboard**: Displays key metric cards (Accuracy, Total Articles, Correct Predictions, Last Close Price) and lists trending terms/phrases.
+* **Analysis Detail**: Displays a breakdown of positive, neutral, and negative sentiment distribution, per-class model accuracy (Precision, Recall, F1), keyword cloud, and AI sentiment summary.
+* **Mentions Feed**: Explores article-level headlines, outlets, dates, sentiment labels, and confidence metrics with full search and filtering controls.
 * **Reports Page**: Provides dynamic Plotly-powered charts:
   - **Sentiment Over Time**: Line chart showing aggregate daily sentiment compared with daily stock prices.
   - **Confusion Matrix**: Visual heatmap evaluating predictions vs. actual stock movements.
   - **Movement Distribution**: Bar charts showing predictions vs. actual stock price movement counts.
+  - **Latest Market Data (OHLCV)**: Clean, high-contrast display of Open, High, Low, Close, and Volume.
 * **Floating Sidebar Controls**: Date/ticker selection inputs with a persistent, non-softlocking sidebar toggle.
 
 ### REST API (FastAPI)
-* Dynamic news collection from NewsAPI.
+* Dynamic news collection via multi-source aggregator (GDELT + RSS).
 * FinBERT-based sentiment analysis and scoring.
 * Evaluates accuracy metrics and confusion matrices.
 * Returns structured JSON responses.
 
-### Keyword Extraction
-* Custom NLP utility that extracts trending keywords (unigrams) and phrases (bigrams) using stop-word filtering to highlight the most discussed terms in the analysis window.
+### Intelligent Multi-Source Fetcher
+* **Date-Chunking RSS Engine**: Bypasses RSS pagination constraints by splitting requests into 30-day chunks (e.g., yielding 1,100+ unique articles over a 90-day window).
+* **Graceful Failover**: Uses exponential backoff with jitter for GDELT API requests and automatically falls back to Yahoo Finance, Google News, and Bing News RSS streams if GDELT is rate-limited.
+* **Deduplication**: Automatically filters out duplicate headlines based on title text and publication source.
 
 ---
 
@@ -71,7 +74,7 @@ The Streamlit application includes four main analytical views:
         ┌─────────┴─────────┐
         ▼                   ▼
 ┌──────────────┐    ┌──────────────┐
-│   NewsAPI    │    │Yahoo Finance│
+│GDELT / RSS   │    │Yahoo Finance│
 │(Headlines)   │    │ (Market Data)│
 └───────┬──────┘    └───────┬──────┘
         │                   │
@@ -103,7 +106,7 @@ The Streamlit application includes four main analytical views:
 * **ML Framework**: PyTorch
 * **Data Processing**: Pandas, NumPy
 * **Market Data**: Yahoo Finance (`yfinance`)
-* **News Source**: NewsAPI (`newsapi-python`)
+* **News Sources**: GDELT 2.0 DOC API, Google News RSS, Yahoo Finance RSS, Bing News RSS (custom standard-library XML parsing)
 * **Evaluation**: Scikit-learn
 
 ---
@@ -123,7 +126,8 @@ The Streamlit application includes four main analytical views:
 ---
 
 ## System Limitations & Disclaimers
-* **NewsAPI Constraints**: Due to NewsAPI Free Tier limitations, article fetches are restricted to headlines published within a **30-day window** from today.
+* **Historical Window**: News collection fetches headlines published within a **90-day window** from today.
+* **No API Keys Required**: Bypasses the strict 30-day restriction and API key requirement of NewsAPI by using public APIs and RSS feeds.
 * **Model Constraints**: Because of local hosting costs and model parameter size, FinBERT prediction accuracy and processing latency may vary depending on the total volume of articles collected.
 * **Disclaimer**: This tool is for educational purposes only. Sentiment predictions are not financial advice.
 
@@ -148,12 +152,6 @@ Activate it:
 ### Install Dependencies
 ```bash
 pip install -r requirements.txt
-```
-
-### Configure Environment Variables
-Create a `.env` file in the root directory:
-```env
-NEWS_API_KEY=your_newsapi_key_here
 ```
 
 ---
@@ -188,34 +186,34 @@ streamlit run streamlit_app.py
 * **Request Body**:
 ```json
 {
-  "ticker": "AMD",
-  "start_date": "2026-05-15",
+  "ticker": "AAPL",
+  "start_date": "2026-03-15",
   "end_date": "2026-06-12"
 }
 ```
 * **Response**:
 ```json
 {
-  "accuracy": 72.5,
-  "total_articles": 40,
-  "correct_predictions": 29,
-  "incorrect_predictions": 11,
+  "accuracy": 64.77,
+  "total_articles": 88,
+  "correct_predictions": 57,
+  "incorrect_predictions": 31,
   "movement_distribution": {
-    "up": 15,
-    "down": 18,
-    "unchanged": 7
+    "up": 44,
+    "down": 36,
+    "unchanged": 8
   },
   "prediction_distribution": {
-    "up": 13,
-    "down": 20,
-    "unchanged": 7
+    "up": 41,
+    "down": 39,
+    "unchanged": 8
   },
   "latest_market_data": {
-    "open": 145.20,
-    "high": 147.80,
-    "low": 143.50,
-    "close": 146.90,
-    "volume": 52300000
+    "open": 289.45,
+    "high": 293.10,
+    "low": 288.75,
+    "close": 291.13,
+    "volume": 49200000
   }
 }
 ```
@@ -241,7 +239,7 @@ Daily scores are aggregated by ticker and publication date.
 * **Aggregate Daily Score < -0.3** $\rightarrow$ **Down**
 * **Otherwise**                    $\rightarrow$ **Unchanged**
 
-The predicted signal is compared against the actual daily stock close price movement (Yahoo Finance).
+The predicted signal is compared against the actual daily stock close price movement (Yahoo Finance). This will change soon depending upon what I think is best
 
 ---
 
