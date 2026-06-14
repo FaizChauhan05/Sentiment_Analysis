@@ -91,6 +91,19 @@ html, body, [class*="css"] {{
     background-color: {C['background']};
 }}
 
+/* ─── Global Custom Component Text Color Enforcement ─── */
+.stApp [data-testid="stMarkdownContainer"] p,
+.stApp [data-testid="stMarkdownContainer"] span,
+.stApp [data-testid="stMarkdownContainer"] div,
+.stApp [data-testid="stMarkdownContainer"] li,
+.stApp [data-testid="stMarkdownContainer"] ul,
+.stApp [data-testid="stMarkdownContainer"] ol,
+.stApp [data-testid="stMarkdownContainer"] td,
+.stApp [data-testid="stMarkdownContainer"] th {{
+    color: {C['on_surface']};
+}}
+
+
 /* ─── Sidebar ─── */
 section[data-testid="stSidebar"] {{
     background: {C['background']} !important;
@@ -242,35 +255,35 @@ h1, h2, h3, h4 {{
     letter-spacing: 0.08em;
     text-transform: uppercase;
 }}
-.badge-pos {{ background: {C['pos_bg']}; color: {C['pos']}; }}
-.badge-neu {{ background: {C['neu_bg']}; color: {C['neu']}; }}
-.badge-neg {{ background: {C['neg_bg']}; color: {C['neg']}; }}
+.badge-pos {{ background: {C['pos_bg']} !important; color: {C['pos']} !important; }}
+.badge-neu {{ background: {C['neu_bg']} !important; color: {C['neu']} !important; }}
+.badge-neg {{ background: {C['neg_bg']} !important; color: {C['neg']} !important; }}
 
 /* ─── Typography tokens ─── */
 .label-caps {{
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
-    color: {C['outline']};
+    color: {C['outline']} !important;
 }}
 .metric-lg {{
     font-family: 'Inter', sans-serif;
     font-size: 28px; font-weight: 700;
     line-height: 34px; letter-spacing: -0.02em;
-    color: {C['on_surface']};
+    color: {C['on_surface']} !important;
     margin: 0;
 }}
 .headline-md {{
     font-family: 'Inter', sans-serif;
     font-size: 20px; font-weight: 600;
     line-height: 28px; letter-spacing: -0.01em;
-    color: {C['on_surface']};
+    color: {C['on_surface']} !important;
     margin: 0;
 }}
 .body-bold {{
     font-family: 'Inter', sans-serif;
     font-size: 14px; font-weight: 600;
-    line-height: 22px; color: {C['on_surface']};
+    line-height: 22px; color: {C['on_surface']} !important;
 }}
 
 /* ─── Page Header ─── */
@@ -278,16 +291,16 @@ h1, h2, h3, h4 {{
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
-    color: {C['primary']}; margin-bottom: 4px;
+    color: {C['primary']} !important; margin-bottom: 4px;
 }}
 .page-hdr .title {{
     font-family: 'Inter', sans-serif;
     font-size: 32px; font-weight: 700;
     line-height: 40px; letter-spacing: -0.02em;
-    color: {C['on_surface']}; margin: 0;
+    color: {C['on_surface']} !important; margin: 0;
 }}
 .page-hdr .sub {{
-    font-size: 14px; color: {C['on_surface_variant']};
+    font-size: 14px; color: {C['on_surface_variant']} !important;
     margin: 4px 0 0 0;
 }}
 
@@ -314,16 +327,16 @@ h1, h2, h3, h4 {{
     border-radius: 8px; display: flex; align-items: center;
     justify-content: center; color: white;
 }}
-.brand h2 {{ margin: 0; font-size: 1.1rem; font-weight: 700; color: {C['primary']}; letter-spacing: -0.02em; line-height: 1.2; }}
-.brand p {{ margin: 0; font-size: 0.68rem; color: {C['outline']}; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.2; }}
+.brand h2 {{ margin: 0; font-size: 1.1rem; font-weight: 700; color: {C['primary']} !important; letter-spacing: -0.02em; line-height: 1.2; }}
+.brand p {{ margin: 0; font-size: 0.68rem; color: {C['outline']} !important; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.2; }}
 
 /* ─── Info Box ─── */
 .info-box {{
     background: {C['surface_container']}; border: 1px solid {C['outline_variant']};
     border-radius: 12px; padding: 20px; margin-top: 16px;
 }}
-.info-box .info-title {{ font-size: 13px; font-weight: 700; color: {C['primary']}; margin-bottom: 10px; }}
-.info-box .info-text {{ font-size: 12px; color: {C['on_surface_variant']}; line-height: 1.6; }}
+.info-box .info-title {{ font-size: 13px; font-weight: 700; color: {C['primary']} !important; margin-bottom: 10px; }}
+.info-box .info-text {{ font-size: 12px; color: {C['on_surface_variant']} !important; line-height: 1.6; }}
 
 /* ─── Accent Metric ─── */
 .accent-metric {{
@@ -656,15 +669,16 @@ def pg_overview():
     sdf = st.session_state.sentiment_df
     adf = st.session_state.aggregated_df
 
-    total = R["total_articles"]
+    total_articles = len(sdf)
+    total_days = R["total_articles"]
     acc   = R["accuracy"]
     close = R["latest_market_data"]["close"]
 
     # ── KPI Row ──
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        st.markdown(_metric_card("forum", "Total Articles", f"{total:,}",
-                                 pct=min(100, total * 2)), unsafe_allow_html=True)
+        st.markdown(_metric_card("forum", "Total Articles", f"{total_articles:,}",
+                                 pct=min(100, total_articles // 10)), unsafe_allow_html=True)
     with c2:
         st.markdown(_metric_card("sentiment_satisfied", "Sentiment Score",
                                  f"{acc:.1f}%", f"{acc:.1f}%", acc > 50,
@@ -672,7 +686,7 @@ def pg_overview():
     with c3:
         st.markdown(_metric_card("check_circle", "Correct",
                                  str(R["correct_predictions"]),
-                                 pct=int(R["correct_predictions"] / max(total, 1) * 100)),
+                                 pct=int(R["correct_predictions"] / max(total_days, 1) * 100)),
                     unsafe_allow_html=True)
     with c4:
         st.markdown(_metric_card("payments", "Last Close",
