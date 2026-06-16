@@ -1,3 +1,7 @@
+import os
+os.environ["TRANSFORMERS_VERBOSITY"] = "error"
+os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
+
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
