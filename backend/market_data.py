@@ -81,7 +81,7 @@ def market_data(df):
         )
 
         pure_date_est = (
-            pure_date.tz_convert('US/Eastern')
+            pure_date.tz_convert('America/New_York')
             if pure_date.tzinfo
             else pure_date
         )
