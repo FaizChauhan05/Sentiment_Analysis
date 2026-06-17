@@ -380,6 +380,31 @@ section[data-testid="stSidebar"] .stRadio label {{
     font-weight: 600;
     font-size: 0.86rem;
 }}
+
+/* ─── Sidebar Padding Adjustment ─── */
+[data-testid="stSidebarContent"], [data-testid="stSidebarUserContent"] {{
+    padding-top: 1rem !important;
+}}
+
+/* ─── Details/Accordion Styles ─── */
+details summary::-webkit-details-marker {{
+    display: none !important;
+}}
+details summary {{
+    list-style: none !important;
+}}
+
+/* ─── Custom Bordered Containers (Cards) ─── */
+div[data-testid="stVerticalBlockBorderWrapper"] {{
+    background: {C['surface']} !important;
+    border: 1px solid {C['outline_variant']} !important;
+    border-radius: 12px !important;
+    padding: 24px !important;
+    transition: box-shadow 0.25s ease, transform 0.2s ease !important;
+}}
+div[data-testid="stVerticalBlockBorderWrapper"]:hover {{
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05) !important;
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -516,12 +541,16 @@ with st.sidebar:
     st.markdown("---")
     st.markdown(f"""
     <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;align-items:center;gap:8px;color:{C['on_surface_variant']};font-size:13px;font-weight:600;">
-            {_icon('contact_support', 18, C['on_surface_variant'])} Support
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;color:{C['on_surface_variant']};font-size:13px;font-weight:600;">
-            {_icon('logout', 18, C['on_surface_variant'])} Log out
-        </div>
+        <details style="color:{C['on_surface_variant']};font-size:13px;font-weight:600;">
+            <summary style="display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;outline:none;">
+                {_icon('contact_support', 18, C['on_surface_variant'])} Support
+            </summary>
+            <div style="padding-top:6px;padding-left:26px;font-size:11px;font-weight:normal;word-break:break-all;">
+                <a href="mailto:mohammedfaizchauhan3@gmail.com" style="color:{C['primary']};text-decoration:none;">
+                    mohammedfaizchauhan3@gmail.com
+                </a>
+            </div>
+        </details>
     </div>
     """, unsafe_allow_html=True)
 
@@ -702,89 +731,86 @@ def pg_overview():
     ch_col, dn_col = st.columns([2, 1])
 
     with ch_col:
-        st.markdown('<div class="sc-card">', unsafe_allow_html=True)
-        st.markdown('<p class="headline-md">Sentiment Trends</p>', unsafe_allow_html=True)
-        st.markdown(f'<p style="font-size:13px;color:{C["on_surface_variant"]};margin-top:-4px;">Score variation over the analysis period</p>', unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown('<p class="headline-md" style="margin:0;">Sentiment Trends</p>', unsafe_allow_html=True)
+            st.markdown(f'<p style="font-size:13px;color:{C["on_surface_variant"]};margin-top:0px;margin-bottom:16px;">Score variation over the analysis period</p>', unsafe_allow_html=True)
 
-        ap = adf.copy()
-        ap["date"] = pd.to_datetime(ap["date"]).dt.date
+            ap = adf.copy()
+            ap["date"] = pd.to_datetime(ap["date"]).dt.date
 
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=ap["date"], y=ap["Aggregate_Score"], mode="lines+markers",
-            line=dict(color=C["primary"], width=3, shape="spline"),
-            marker=dict(size=6, color=C["primary"], line=dict(width=2, color="white")),
-            fill="tozeroy", fillcolor="rgba(70,72,212,0.08)", name="Score",
-            hovertemplate="<b>%{x}</b><br>Score: %{y:.3f}<extra></extra>"))
-        fig.add_hline(y=0.3, line_dash="dash", line_color=C["pos"], opacity=0.5,
-                      annotation_text="Bullish", annotation_font_color=C["pos"])
-        fig.add_hline(y=-0.3, line_dash="dash", line_color=C["neg"], opacity=0.5,
-                      annotation_text="Bearish", annotation_font_color=C["neg"])
-        fig.add_hline(y=0, line_dash="dot", line_color=C["outline"], opacity=0.3)
-        ly = _plotly_base(height=320); ly["showlegend"] = False
-        fig.update_layout(**ly)
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-        st.markdown('</div>', unsafe_allow_html=True)
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=ap["date"], y=ap["Aggregate_Score"], mode="lines+markers",
+                line=dict(color=C["primary"], width=3, shape="spline"),
+                marker=dict(size=6, color=C["primary"], line=dict(width=2, color="white")),
+                fill="tozeroy", fillcolor="rgba(70,72,212,0.08)", name="Score",
+                hovertemplate="<b>%{x}</b><br>Score: %{y:.3f}<extra></extra>"))
+            fig.add_hline(y=0.3, line_dash="dash", line_color=C["pos"], opacity=0.5,
+                          annotation_text="Bullish", annotation_font_color=C["pos"])
+            fig.add_hline(y=-0.3, line_dash="dash", line_color=C["neg"], opacity=0.5,
+                          annotation_text="Bearish", annotation_font_color=C["neg"])
+            fig.add_hline(y=0, line_dash="dot", line_color=C["outline"], opacity=0.3)
+            ly = _plotly_base(height=320); ly["showlegend"] = False
+            fig.update_layout(**ly)
+            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     with dn_col:
-        st.markdown('<div class="sc-card" style="height:100%;">', unsafe_allow_html=True)
-        st.markdown('<p class="headline-md">Sentiment Mix</p>', unsafe_allow_html=True)
-        st.markdown(f'<p style="font-size:13px;color:{C["on_surface_variant"]};margin-top:-4px;">Distribution breakdown</p>', unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown('<p class="headline-md" style="margin:0;">Sentiment Mix</p>', unsafe_allow_html=True)
+            st.markdown(f'<p style="font-size:13px;color:{C["on_surface_variant"]};margin-top:0px;margin-bottom:16px;">Distribution breakdown</p>', unsafe_allow_html=True)
 
-        sc = sdf["Sentiment"].value_counts()
-        labs = sc.index.tolist(); vals = sc.values.tolist()
-        cmap = {"positive": C["pos"], "negative": C["neg"], "neutral": C["neu"]}
-        cols = [cmap.get(l, C["outline"]) for l in labs]
-        dominant_pct = int(vals[0] / sum(vals) * 100) if vals else 0
+            sc = sdf["Sentiment"].value_counts()
+            labs = sc.index.tolist(); vals = sc.values.tolist()
+            cmap = {"positive": C["pos"], "negative": C["neg"], "neutral": C["neu"]}
+            cols = [cmap.get(l, C["outline"]) for l in labs]
+            dominant_pct = int(vals[0] / sum(vals) * 100) if vals else 0
 
-        fd = go.Figure(data=[go.Pie(
-            labels=[l.capitalize() for l in labs], values=vals, hole=0.65,
-            marker=dict(colors=cols, line=dict(color="white", width=3)),
-            textinfo="percent",
-            textfont=dict(family="JetBrains Mono, monospace", size=11, color="white"),
-            hovertemplate="<b>%{label}</b><br>Count: %{value}<br>%{percent}<extra></extra>")])
-        fd.update_layout(
-            plot_bgcolor=C["surface"], paper_bgcolor=C["surface"],
-            margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False,
-            annotations=[dict(
-                text=f"<b>{dominant_pct}%</b><br><span style='font-size:9px;color:{C['outline']}'>Dominant</span>",
-                x=0.5, y=0.5, font_size=22, font_family="Inter", font_color=C["on_surface"], showarrow=False)])
-        st.plotly_chart(fd, use_container_width=True, config={"displayModeBar": False})
+            fd = go.Figure(data=[go.Pie(
+                labels=[l.capitalize() for l in labs], values=vals, hole=0.65,
+                marker=dict(colors=cols, line=dict(color="white", width=3)),
+                textinfo="percent",
+                textfont=dict(family="JetBrains Mono, monospace", size=11, color="white"),
+                hovertemplate="<b>%{label}</b><br>Count: %{value}<br>%{percent}<extra></extra>")])
+            fd.update_layout(
+                plot_bgcolor=C["surface"], paper_bgcolor=C["surface"],
+                margin=dict(l=10, r=10, t=10, b=10), height=230, showlegend=False,
+                annotations=[dict(
+                    text=f"<b>{dominant_pct}%</b><br><span style='font-size:9px;color:{C['outline']}'>Dominant</span>",
+                    x=0.5, y=0.5, font_size=22, font_family="Inter", font_color=C["on_surface"], showarrow=False)])
+            st.plotly_chart(fd, use_container_width=True, config={"displayModeBar": False})
 
-        for lbl in labs:
-            clr = cmap.get(lbl, C["outline"]); pct = int(sc[lbl] / sum(vals) * 100)
-            st.markdown(f"""<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;">
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <div style="width:10px;height:10px;border-radius:50%;background:{clr};"></div>
-                    <span class="body-bold">{lbl.capitalize()}</span>
-                </div><span class="label-caps">{pct}%</span></div>""", unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+            for lbl in labs:
+                clr = cmap.get(lbl, C["outline"]); pct = int(sc[lbl] / sum(vals) * 100)
+                st.markdown(f"""<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div style="width:10px;height:10px;border-radius:50%;background:{clr};"></div>
+                        <span class="body-bold">{lbl.capitalize()}</span>
+                    </div><span class="label-caps">{pct}%</span></div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
 
     # ── Recent Mentions Table ──
-    st.markdown('<div class="sc-card">', unsafe_allow_html=True)
-    hc1, hc2 = st.columns([3, 1])
-    with hc1:
-        st.markdown('<p class="headline-md">Recent Mentions</p>', unsafe_allow_html=True)
-        st.markdown(f'<p style="font-size:13px;color:{C["on_surface_variant"]};">Real-time engagement feed</p>', unsafe_allow_html=True)
-    with hc2:
-        st.markdown(f'<p style="text-align:right;"><a style="color:{C["primary"]};font-weight:600;font-size:13px;text-decoration:none;" href="#">View All Activity</a></p>', unsafe_allow_html=True)
+    with st.container(border=True):
+        hc1, hc2 = st.columns([3, 1])
+        with hc1:
+            st.markdown('<p class="headline-md" style="margin:0;">Recent Mentions</p>', unsafe_allow_html=True)
+            st.markdown(f'<p style="font-size:13px;color:{C["on_surface_variant"]};margin-top:0px;margin-bottom:16px;">Real-time engagement feed</p>', unsafe_allow_html=True)
+        with hc2:
+            st.markdown(f'<p style="text-align:right;"><a style="color:{C["primary"]};font-weight:600;font-size:13px;text-decoration:none;" href="#">View All Activity</a></p>', unsafe_allow_html=True)
 
-    ddf = sdf[["headline", "source", "published_at", "Sentiment", "Confidence"]].head(10).copy()
-    ddf["published_at"] = pd.to_datetime(ddf["published_at"]).dt.strftime("%Y-%m-%d %H:%M")
-    ddf["Confidence"] = ddf["Confidence"].apply(lambda x: f"{float(x)*100:.1f}%")
+        ddf = sdf[["headline", "source", "published_at", "Sentiment", "Confidence"]].head(10).copy()
+        ddf["published_at"] = pd.to_datetime(ddf["published_at"]).dt.strftime("%Y-%m-%d %H:%M")
+        ddf["Confidence"] = ddf["Confidence"].apply(lambda x: f"{float(x)*100:.1f}%")
 
-    html = _table_header("Headline", "Source", "Sentiment", "Confidence", align_last_right=True)
-    for _, r in ddf.iterrows():
-        html += f"""<tr style="border-bottom:1px solid {C['outline_variant']};">
-            <td style="padding:14px 16px;max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:{C['on_surface']};">{r['headline']}</td>
-            <td style="padding:14px 16px;color:{C['on_surface_variant']};">{r['source']}</td>
-            <td style="padding:14px 16px;">{_badge(r['Sentiment'])}</td>
-            <td style="padding:14px 16px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;color:{C['on_surface']};">{r['Confidence']}</td></tr>"""
-    html += "</tbody></table>"
-    st.markdown(html, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+        html = _table_header("Headline", "Source", "Sentiment", "Confidence", align_last_right=True)
+        for _, r in ddf.iterrows():
+            html += f"""<tr style="border-bottom:1px solid {C['outline_variant']};">
+                <td style="padding:14px 16px;max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:{C['on_surface']};">{r['headline']}</td>
+                <td style="padding:14px 16px;color:{C['on_surface_variant']};">{r['source']}</td>
+                <td style="padding:14px 16px;">{_badge(r['Sentiment'])}</td>
+                <td style="padding:14px 16px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;color:{C['on_surface']};">{r['Confidence']}</td></tr>"""
+        html += "</tbody></table>"
+        st.markdown(html, unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -839,27 +865,26 @@ def pg_analysis():
     kw_col, ai_col = st.columns([3, 2])
 
     with kw_col:
-        st.markdown('<div class="sc-card">', unsafe_allow_html=True)
-        kws = extract_keywords(sdf["headline"], top_n=12)
-        vol = sum(c for _, c in kws) if kws else 0
-        st.markdown(f"""<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <p class="headline-md" style="margin:0;">Trending Keywords</p>
-            <span class="label-caps">Volume: {vol:,}</span></div>""", unsafe_allow_html=True)
+        with st.container(border=True):
+            kws = extract_keywords(sdf["headline"], top_n=12)
+            vol = sum(c for _, c in kws) if kws else 0
+            st.markdown(f"""<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <p class="headline-md" style="margin:0;">Trending Keywords</p>
+                <span class="label-caps">Volume: {vol:,}</span></div>""", unsafe_allow_html=True)
 
-        cloud = f'<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;padding:24px;background:{C["surface_container_lo"]};border-radius:8px;min-height:260px;">'
-        sizes = [28, 24, 22, 20, 18, 16, 15, 14, 13, 13, 12, 12]
-        clrs  = [C["primary"], C["on_surface_variant"], C["pos"], C["tertiary"],
-                 C["primary_container"], C["neg"], C["outline"], C["on_surface"],
-                 C["primary_fixed"].replace("#e1e0ff", C["primary"]),
-                 C["on_surface_variant"], C["outline"], C["tertiary_container"]]
-        for i, (word, cnt) in enumerate(kws):
-            sz = sizes[i] if i < len(sizes) else 12
-            cl = clrs[i % len(clrs)]
-            fw = "700" if i < 4 else "600"
-            cloud += f'<span style="font-size:{sz}px;font-weight:{fw};color:{cl};cursor:default;transition:all 0.2s;font-family:Inter,sans-serif;">{word.capitalize()}</span>'
-        cloud += '</div>'
-        st.markdown(cloud, unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+            cloud = f'<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;padding:24px;background:{C["surface_container_lo"]};border-radius:8px;min-height:260px;">'
+            sizes = [28, 24, 22, 20, 18, 16, 15, 14, 13, 13, 12, 12]
+            clrs  = [C["primary"], C["on_surface_variant"], C["pos"], C["tertiary"],
+                     C["primary_container"], C["neg"], C["outline"], C["on_surface"],
+                     C["primary_fixed"].replace("#e1e0ff", C["primary"]),
+                     C["on_surface_variant"], C["outline"], C["tertiary_container"]]
+            for i, (word, cnt) in enumerate(kws):
+                sz = sizes[i] if i < len(sizes) else 12
+                cl = clrs[i % len(clrs)]
+                fw = "700" if i < 4 else "600"
+                cloud += f'<span style="font-size:{sz}px;font-weight:{fw};color:{cl};cursor:default;transition:all 0.2s;font-family:Inter,sans-serif;">{word.capitalize()}</span>'
+            cloud += '</div>'
+            st.markdown(cloud, unsafe_allow_html=True)
 
     with ai_col:
         dominant = "positive" if pos_p > neg_p else "negative"
@@ -868,8 +893,8 @@ def pg_analysis():
         <div style="background:{C['surface_container']};border:1px solid {C['outline_variant']};
                     border-radius:12px;padding:24px;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-                {_icon('auto_awesome', 20, C['primary'])}
-                <span class="body-bold">AI Summary</span>
+                {_icon('description', 20, C['primary'])}
+                <span class="body-bold">Summary</span>
             </div>
             <p style="color:{C['on_surface_variant']};font-size:13px;line-height:1.7;">
                 Analysis of <strong>{tot}</strong> articles for <strong>{tk}</strong> shows an overall
@@ -896,73 +921,70 @@ def pg_analysis():
         # Per-class metrics from enhanced Evaluation
         pcm = R.get("per_class_metrics", {})
         if pcm:
-            st.markdown(f"""
-            <div class="sc-card">
-                <p class="body-bold" style="margin-bottom:16px;">Per-Class Performance</p>
-            """, unsafe_allow_html=True)
-            for cls_name, m in pcm.items():
-                clr = C["pos"] if cls_name == "up" else (C["neg"] if cls_name == "down" else C["neu"])
+            with st.container(border=True):
                 st.markdown(f"""
-                <div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid {C['outline_variant']};">
-                    <div style="flex:1;">
-                        <span style="font-weight:600;color:{clr};text-transform:capitalize;">{cls_name}</span>
-                    </div>
-                    <div style="text-align:right;">
-                        <span class="label-caps" style="font-size:10px;">P {m['precision']}%  R {m['recall']}%  F1 {m['f1']}%</span>
-                    </div>
-                </div>""", unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+                    <p class="body-bold" style="margin-bottom:16px;">Per-Class Performance</p>
+                """, unsafe_allow_html=True)
+                for cls_name, m in pcm.items():
+                    clr = C["pos"] if cls_name == "up" else (C["neg"] if cls_name == "down" else C["neu"])
+                    st.markdown(f"""
+                    <div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid {C['outline_variant']};">
+                        <div style="flex:1;">
+                            <span style="font-weight:600;color:{clr};text-transform:capitalize;">{cls_name}</span>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="label-caps" style="font-size:10px;">P {m['precision']}%  R {m['recall']}%  F1 {m['f1']}%</span>
+                        </div>
+                    </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
 
     # ── Source Breakdown Chart ──
-    st.markdown('<div class="sc-card">', unsafe_allow_html=True)
-    st.markdown('<p class="headline-md">Sentiment by Source</p>', unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown('<p class="headline-md" style="margin:0 0 16px 0;">Sentiment by Source</p>', unsafe_allow_html=True)
 
-    src_sent = sdf.groupby(["source", "Sentiment"]).size().unstack(fill_value=0)
-    top_src = src_sent.sum(axis=1).nlargest(8).index
-    src_data = src_sent.loc[top_src]
+        src_sent = sdf.groupby(["source", "Sentiment"]).size().unstack(fill_value=0)
+        top_src = src_sent.sum(axis=1).nlargest(8).index
+        src_data = src_sent.loc[top_src]
 
-    fb = go.Figure()
-    for s, cl in [("positive", C["pos"]), ("neutral", C["neu"]), ("negative", C["neg"])]:
-        if s in src_data.columns:
-            fb.add_trace(go.Bar(y=src_data.index, x=src_data[s], name=s.capitalize(),
-                                orientation="h", marker=dict(color=cl, cornerradius=4)))
-    ly = _plotly_base(height=320)
-    ly["barmode"] = "stack"
-    ly["yaxis"]["tickfont"] = dict(family="Inter", size=11, color=C["on_surface"])
-    ly["legend"] = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
-                        font=dict(family="JetBrains Mono, monospace", size=10))
-    fb.update_layout(**ly)
-    st.plotly_chart(fb, use_container_width=True, config={"displayModeBar": False})
-    st.markdown('</div>', unsafe_allow_html=True)
+        fb = go.Figure()
+        for s, cl in [("positive", C["pos"]), ("neutral", C["neu"]), ("negative", C["neg"])]:
+            if s in src_data.columns:
+                fb.add_trace(go.Bar(y=src_data.index, x=src_data[s], name=s.capitalize(),
+                                    orientation="h", marker=dict(color=cl, cornerradius=4)))
+        ly = _plotly_base(height=320)
+        ly["barmode"] = "stack"
+        ly["yaxis"]["tickfont"] = dict(family="Inter", size=11, color=C["on_surface"])
+        ly["legend"] = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+                            font=dict(family="JetBrains Mono, monospace", size=10))
+        fb.update_layout(**ly)
+        st.plotly_chart(fb, use_container_width=True, config={"displayModeBar": False})
 
     st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
 
     # ── High Impact Mentions ──
-    st.markdown('<div class="sc-card">', unsafe_allow_html=True)
-    st.markdown(f"""<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <p class="headline-md" style="margin:0;">High Impact Mentions</p>
-        <a style="color:{C['primary']};font-weight:600;font-size:13px;text-decoration:none;" href="#">View All Source Data</a>
-    </div>""", unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown(f"""<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <p class="headline-md" style="margin:0;">High Impact Mentions</p>
+            <a style="color:{C['primary']};font-weight:600;font-size:13px;text-decoration:none;" href="#">View All Source Data</a>
+        </div>""", unsafe_allow_html=True)
 
-    hi = sdf[["headline", "source", "published_at", "Sentiment", "Confidence"]].copy()
-    hi["_conf"] = hi["Confidence"].apply(float)
-    hi = hi.nlargest(10, "_conf")
-    hi["published_at"] = pd.to_datetime(hi["published_at"]).dt.strftime("%Y-%m-%d %H:%M")
-    hi["Confidence"] = hi["_conf"].apply(lambda x: f"{x*100:.1f}%")
+        hi = sdf[["headline", "source", "published_at", "Sentiment", "Confidence"]].copy()
+        hi["_conf"] = hi["Confidence"].apply(float)
+        hi = hi.nlargest(10, "_conf")
+        hi["published_at"] = pd.to_datetime(hi["published_at"]).dt.strftime("%Y-%m-%d %H:%M")
+        hi["Confidence"] = hi["_conf"].apply(lambda x: f"{x*100:.1f}%")
 
-    html = _table_header("Source", "Content", "Sentiment", "Confidence", "Time", align_last_right=True)
-    for _, r in hi.iterrows():
-        html += f"""<tr style="border-bottom:1px solid {C['outline_variant']};">
-            <td style="padding:14px 16px;font-weight:600;white-space:nowrap;color:{C['on_surface']};">{r['source']}</td>
-            <td style="padding:14px 16px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:{C['on_surface']};">{r['headline']}</td>
-            <td style="padding:14px 16px;">{_badge(r['Sentiment'])}</td>
-            <td style="padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;color:{C['on_surface']};">{r['Confidence']}</td>
-            <td style="padding:14px 16px;text-align:right;color:{C['outline']};font-size:12px;">{r['published_at']}</td></tr>"""
-    html += "</tbody></table>"
-    st.markdown(html, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+        html = _table_header("Source", "Content", "Sentiment", "Confidence", "Time", align_last_right=True)
+        for _, r in hi.iterrows():
+            html += f"""<tr style="border-bottom:1px solid {C['outline_variant']};">
+                <td style="padding:14px 16px;font-weight:600;white-space:nowrap;color:{C['on_surface']};">{r['source']}</td>
+                <td style="padding:14px 16px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:{C['on_surface']};">{r['headline']}</td>
+                <td style="padding:14px 16px;">{_badge(r['Sentiment'])}</td>
+                <td style="padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;color:{C['on_surface']};">{r['Confidence']}</td>
+                <td style="padding:14px 16px;text-align:right;color:{C['outline']};font-size:12px;">{r['published_at']}</td></tr>"""
+        html += "</tbody></table>"
+        st.markdown(html, unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1010,8 +1032,8 @@ def pg_mentions():
         of <strong style="color:{C['on_surface']};">{total_f:,}</strong> mentions</p>""", unsafe_allow_html=True)
 
     # ── Table ──
-    st.markdown('<div class="sc-card" style="padding:0;overflow:hidden;">', unsafe_allow_html=True)
-    html = f"""<table style="width:100%;border-collapse:collapse;font-size:13px;font-family:'Inter',sans-serif;">
+    html = f"""<div class="sc-card" style="padding:0;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;font-family:'Inter',sans-serif;">
         <thead><tr style="background:{C['surface_container']};border-bottom:1px solid {C['outline_variant']};">
             <th style="text-align:left;padding:14px 16px;" class="label-caps">Source</th>
             <th style="text-align:left;padding:14px 16px;" class="label-caps">Mention Content</th>
@@ -1027,9 +1049,8 @@ def pg_mentions():
             <td style="padding:14px 16px;max-width:500px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{r['headline']}</td>
             <td style="padding:14px 16px;">{_badge(r['Sentiment'])}</td>
             <td style="padding:14px 16px;text-align:right;color:{C['on_surface_variant']};font-size:12px;">{ts}</td></tr>"""
-    html += "</tbody></table>"
+    html += "</tbody></table></div>"
     st.markdown(html, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
 
@@ -1127,85 +1148,81 @@ def pg_reports():
     tabs = st.tabs(["Sentiment Over Time", "Confusion Matrix", "Distribution"])
 
     with tabs[0]:
-        st.markdown('<div class="sc-card">', unsafe_allow_html=True)
-        tmp = sdf.copy()
-        tmp["date"] = pd.to_datetime(tmp["published_at"], utc=True).dt.normalize()
-        daily = tmp.groupby(["date", "Sentiment"]).size().unstack(fill_value=0).reset_index()
-        daily["date"] = daily["date"].dt.date
+        with st.container(border=True):
+            tmp = sdf.copy()
+            tmp["date"] = pd.to_datetime(tmp["published_at"], utc=True).dt.normalize()
+            daily = tmp.groupby(["date", "Sentiment"]).size().unstack(fill_value=0).reset_index()
+            daily["date"] = daily["date"].dt.date
 
-        fa = go.Figure()
-        for s, cl, fl in [("positive", C["pos"], C["pos_bg"]),
-                           ("neutral", C["neu"], C["neu_bg"]),
-                           ("negative", C["neg"], C["neg_bg"])]:
-            if s in daily.columns:
-                fa.add_trace(go.Scatter(
-                    x=daily["date"], y=daily[s], mode="lines",
-                    name=s.capitalize(), line=dict(color=cl, width=2, shape="spline"),
-                    stackgroup="one", fillcolor=fl,
-                    hovertemplate=f"<b>{s.capitalize()}</b><br>Date: %{{x}}<br>Count: %{{y}}<extra></extra>"))
-        ly = _plotly_base(height=380)
-        ly["legend"] = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
-                            font=dict(family="JetBrains Mono, monospace", size=10))
-        fa.update_layout(**ly)
-        st.plotly_chart(fa, use_container_width=True, config={"displayModeBar": False})
-        st.markdown('</div>', unsafe_allow_html=True)
+            fa = go.Figure()
+            for s, cl, fl in [("positive", C["pos"], C["pos_bg"]),
+                               ("neutral", C["neu"], C["neu_bg"]),
+                               ("negative", C["neg"], C["neg_bg"])]:
+                if s in daily.columns:
+                    fa.add_trace(go.Scatter(
+                        x=daily["date"], y=daily[s], mode="lines",
+                        name=s.capitalize(), line=dict(color=cl, width=2, shape="spline"),
+                        stackgroup="one", fillcolor=fl,
+                        hovertemplate=f"<b>{s.capitalize()}</b><br>Date: %{{x}}<br>Count: %{{y}}<extra></extra>"))
+            ly = _plotly_base(height=380)
+            ly["legend"] = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+                                font=dict(family="JetBrains Mono, monospace", size=10))
+            fa.update_layout(**ly)
+            st.plotly_chart(fa, use_container_width=True, config={"displayModeBar": False})
 
     with tabs[1]:
-        st.markdown('<div class="sc-card">', unsafe_allow_html=True)
-        from sklearn.metrics import confusion_matrix
-        labels = ["up", "down", "unchanged"]
-        cm = confusion_matrix(ndf["Movement"], ndf["Predictions"], labels=labels)
-        fc = px.imshow(
-            cm, labels=dict(x="Predicted", y="Actual", color="Count"),
-            x=["Up", "Down", "Unchanged"], y=["Up", "Down", "Unchanged"],
-            color_continuous_scale=[[0.0, "#e1e0ff"], [0.5, "#6063ee"], [1.0, "#4648d4"]],
-            text_auto=True)
-        fc.update_layout(plot_bgcolor=C["surface"], paper_bgcolor=C["surface"],
-                         font=dict(family="Inter", color=C["on_surface"]),
-                         margin=dict(l=20, r=20, t=40, b=20), height=380,
-                         xaxis=dict(tickfont=dict(family="JetBrains Mono", size=11)),
-                         yaxis=dict(tickfont=dict(family="JetBrains Mono", size=11)))
-        fc.update_traces(textfont=dict(size=18, color="white", family="Inter"))
-        st.plotly_chart(fc, use_container_width=True, config={"displayModeBar": False})
-        st.markdown('</div>', unsafe_allow_html=True)
+        with st.container(border=True):
+            from sklearn.metrics import confusion_matrix
+            labels = ["up", "down", "unchanged"]
+            cm = confusion_matrix(ndf["Movement"], ndf["Predictions"], labels=labels)
+            fc = px.imshow(
+                cm, labels=dict(x="Predicted", y="Actual", color="Count"),
+                x=["Up", "Down", "Unchanged"], y=["Up", "Down", "Unchanged"],
+                color_continuous_scale=[[0.0, "#e1e0ff"], [0.5, "#6063ee"], [1.0, "#4648d4"]],
+                text_auto=True)
+            fc.update_layout(plot_bgcolor=C["surface"], paper_bgcolor=C["surface"],
+                             font=dict(family="Inter", color=C["on_surface"]),
+                             margin=dict(l=20, r=20, t=40, b=20), height=380,
+                             xaxis=dict(tickfont=dict(family="JetBrains Mono", size=11)),
+                             yaxis=dict(tickfont=dict(family="JetBrains Mono", size=11)))
+            fc.update_traces(textfont=dict(size=18, color="white", family="Inter"))
+            st.plotly_chart(fc, use_container_width=True, config={"displayModeBar": False})
 
     with tabs[2]:
-        st.markdown('<div class="sc-card">', unsafe_allow_html=True)
-        d1, d2 = st.columns(2)
-        for col, (title, dist) in zip([d1, d2],
-            [("Actual Movement", R["movement_distribution"]),
-             ("Predicted Movement", R["prediction_distribution"])]):
-            with col:
-                st.markdown(f'<p class="headline-md">{title}</p>', unsafe_allow_html=True)
-                fg = go.Figure(data=[go.Bar(
-                    x=list(dist.keys()), y=list(dist.values()),
-                    marker=dict(color=[C["pos"], C["neg"], C["neu"]], cornerradius=6),
-                    text=list(dist.values()), textposition="outside",
-                    textfont=dict(family="JetBrains Mono", size=12, color=C["on_surface"]))])
-                ly = _plotly_base(height=300); ly["showlegend"] = False
-                ly["xaxis"]["tickfont"] = dict(family="JetBrains Mono", size=11, color=C["on_surface"])
-                fg.update_layout(**ly)
-                st.plotly_chart(fg, use_container_width=True, config={"displayModeBar": False})
-        st.markdown('</div>', unsafe_allow_html=True)
+        with st.container(border=True):
+            d1, d2 = st.columns(2)
+            for col, (title, dist) in zip([d1, d2],
+                [("Actual Movement", R["movement_distribution"]),
+                 ("Predicted Movement", R["prediction_distribution"])]):
+                with col:
+                    st.markdown(f'<p class="headline-md" style="margin:0 0 16px 0;">{title}</p>', unsafe_allow_html=True)
+                    fg = go.Figure(data=[go.Bar(
+                        x=list(dist.keys()), y=list(dist.values()),
+                        marker=dict(color=[C["pos"], C["neg"], C["neu"]], cornerradius=6),
+                        text=list(dist.values()), textposition="outside",
+                        textfont=dict(family="JetBrains Mono", size=12, color=C["on_surface"]))])
+                    ly = _plotly_base(height=300); ly["showlegend"] = False
+                    ly["xaxis"]["tickfont"] = dict(family="JetBrains Mono", size=11, color=C["on_surface"])
+                    fg.update_layout(**ly)
+                    st.plotly_chart(fg, use_container_width=True, config={"displayModeBar": False})
 
     st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
 
     # ── Market Data ──
-    st.markdown('<div class="sc-card">', unsafe_allow_html=True)
-    st.markdown('<p class="headline-md">Latest Market Data</p>', unsafe_allow_html=True)
-    lmd = R["latest_market_data"]
-    items = [("Open", f"${lmd['open']:.2f}"), ("High", f"${lmd['high']:.2f}"),
-             ("Low", f"${lmd['low']:.2f}"), ("Close", f"${lmd['close']:.2f}"),
-             ("Volume", f"{lmd['volume']:,}")]
-    mh = '<div style="display:flex;gap:16px;flex-wrap:wrap;">'
-    for lab, val in items:
-        mh += f"""<div style="flex:1;min-width:140px;background:{C['surface_container_lo']};
-                    border-radius:8px;padding:16px;">
-            <p class="label-caps" style="margin-bottom:4px;">{lab}</p>
-            <p style="font-size:20px;font-weight:700;margin:0;">{val}</p></div>"""
-    mh += '</div>'
-    st.markdown(mh, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown('<p class="headline-md" style="margin:0 0 16px 0;">Latest Market Data</p>', unsafe_allow_html=True)
+        lmd = R["latest_market_data"]
+        items = [("Open", f"${lmd['open']:.2f}"), ("High", f"${lmd['high']:.2f}"),
+                 ("Low", f"${lmd['low']:.2f}"), ("Close", f"${lmd['close']:.2f}"),
+                 ("Volume", f"{lmd['volume']:,}")]
+        mh = '<div style="display:flex;gap:16px;flex-wrap:wrap;">'
+        for lab, val in items:
+            mh += f"""<div style="flex:1;min-width:140px;background:{C['surface_container_lo']};
+                        border-radius:8px;padding:16px;">
+                <p class="label-caps" style="margin-bottom:4px;">{lab}</p>
+                <p style="font-size:20px;font-weight:700;margin:0;">{val}</p></div>"""
+        mh += '</div>'
+        st.markdown(mh, unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1219,5 +1236,5 @@ st.markdown("---")
 st.markdown(f"""
 <p style="text-align:center;color:{C['outline']};font-size:11px;
           font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">
-    Powered by FinBERT  |  NewsAPI  |  Yahoo Finance  |  Streamlit
+    Powered by FinBERT  |  Yahoo Finance  |  Streamlit
 </p>""", unsafe_allow_html=True)
