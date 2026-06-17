@@ -524,13 +524,13 @@ with st.sidebar:
     # Updated disclaimer card reflecting the GDELT integration
     st.markdown(f"""
     <div style="background:{C['surface_container_lo']}; border: 1px solid {C['outline_variant']};
-                border-radius: 8px; padding: 12px; margin-top: 6px; margin-bottom: 6px;">
-        <p style="font-size: 11px; font-weight: 700; color: {C['tertiary']}; margin: 0 0 6px 0;
-                  display: flex; align-items: center; gap: 6px; font-family: 'Inter', sans-serif;">
-            {_icon('info', 16, C['tertiary'])} Pipeline Configuration
+                border-radius: 8px; padding: 8px 10px; margin-top: 6px; margin-bottom: 6px;">
+        <p style="font-size: 10px; font-weight: 700; color: {C['tertiary']}; margin: 0 0 4px 0;
+                  display: flex; align-items: center; gap: 4px; font-family: 'Inter', sans-serif;">
+            {_icon('info', 14, C['tertiary'])} Pipeline Configuration
         </p>
-        <ul style="font-size: 11.5px; color: {C['on_surface_variant']}; margin: 0; padding-left: 16px; line-height: 1.4; font-family: 'Inter', sans-serif;">
-            <li style="margin-bottom: 6px;"><strong>Automated Window:</strong> Analyzing historical volume from <strong>{start_date.strftime('%Y-%m-%d')}</strong> to <strong>{end_date.strftime('%Y-%m-%d')}</strong> (Rolling 90-Day GDELT Limit).</li>
+        <ul style="font-size: 10px; color: {C['on_surface_variant']}; margin: 0; padding-left: 12px; line-height: 1.35; font-family: 'Inter', sans-serif;">
+            <li style="margin-bottom: 4px;"><strong>Automated Window:</strong> Analyzing historical volume from <strong>{start_date.strftime('%Y-%m-%d')}</strong> to <strong>{end_date.strftime('%Y-%m-%d')}</strong> (Rolling 90-Day GDELT Limit).</li>
             <li><strong>Model Performance:</strong> FinBERT inference is batched. Processing times will vary depending on the historical news volume for the selected ticker.</li>
         </ul>
     </div>
