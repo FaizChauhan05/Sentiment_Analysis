@@ -536,6 +536,8 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
+    run_btn = st.button("Run Analysis", key="run_analysis", use_container_width=True)
+
     # Warning card about hardcoded thresholds
     st.markdown(f"""
     <div style="background:{C['error_container']}; border: 1px solid {C['error']};
@@ -546,21 +548,6 @@ with st.sidebar:
         </p>
         <p style="font-size: 11.5px; color: {C['on_surface_variant']}; margin: 0; line-height: 1.4; font-family: 'Inter', sans-serif;">
             The model is currently running on hardcoded thresholds, which will affect accuracy. This will be updated in the future.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    run_btn = st.button("Run Analysis", key="run_analysis", use_container_width=True)
-
-    st.markdown(f"""
-    <div class="info-box">
-        <p class="info-title">How it works</p>
-        <p class="info-text">
-            1. News headlines fetched via GDELT / Yahoo Finance<br>
-            2. FinBERT classifies each headline<br>
-            3. Scores aggregated per trading day<br>
-            4. Market data from Yahoo Finance<br>
-            5. Predictions vs. actual movements
         </p>
     </div>
     """, unsafe_allow_html=True)
