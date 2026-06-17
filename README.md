@@ -1,4 +1,4 @@
-# SentiCore | Financial News Sentiment Analysis & Stock Movement Prediction
+# SentiCore | Financial News Sentiment Analysis & Stock Movement Prediction https://sentiment-analysis-finbertt.streamlit.app/
 
 A dual-mode machine learning application featuring an interactive Streamlit analytics dashboard and a FastAPI backend. It analyzes financial news headlines using FinBERT and evaluates whether sentiment-driven predictions align with actual stock market movements.
 
