@@ -382,11 +382,22 @@ section[data-testid="stSidebar"] .stRadio label {{
     font-size: 0.86rem;
 }}
 
-/* ─── Sidebar Padding Adjustment ─── */
+/* ─── Sidebar Spacing and Padding Adjustments ─── */
 [data-testid="stSidebarContent"], [data-testid="stSidebarUserContent"], [data-testid="stSidebarHeader"] {{
     padding-top: 0rem !important;
     padding-bottom: 0rem !important;
     margin-top: 0rem !important;
+}}
+
+/* Tighten vertical block layout gaps inside the sidebar */
+section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {{
+    gap: 0.4rem !important;
+}}
+
+/* Tighten horizontal dividers inside the sidebar */
+section[data-testid="stSidebar"] hr {{
+    margin-top: 0.4rem !important;
+    margin-bottom: 0.4rem !important;
 }}
 
 /* ─── Details/Accordion Styles ─── */
@@ -513,7 +524,7 @@ with st.sidebar:
     # Updated disclaimer card reflecting the GDELT integration
     st.markdown(f"""
     <div style="background:{C['surface_container_lo']}; border: 1px solid {C['outline_variant']};
-                border-radius: 8px; padding: 12px; margin-top: 10px; margin-bottom: 6px;">
+                border-radius: 8px; padding: 12px; margin-top: 6px; margin-bottom: 6px;">
         <p style="font-size: 11px; font-weight: 700; color: {C['tertiary']}; margin: 0 0 6px 0;
                   display: flex; align-items: center; gap: 6px; font-family: 'Inter', sans-serif;">
             {_icon('info', 16, C['tertiary'])} Pipeline Configuration
@@ -525,7 +536,20 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    # Warning card about hardcoded thresholds
+    st.markdown(f"""
+    <div style="background:{C['error_container']}; border: 1px solid {C['error']};
+                border-radius: 8px; padding: 12px; margin-top: 6px; margin-bottom: 6px;">
+        <p style="font-size: 11px; font-weight: 700; color: {C['error']}; margin: 0 0 6px 0;
+                  display: flex; align-items: center; gap: 6px; font-family: 'Inter', sans-serif;">
+            {_icon('warning', 16, C['error'])} Model Notice
+        </p>
+        <p style="font-size: 11.5px; color: {C['on_surface_variant']}; margin: 0; line-height: 1.4; font-family: 'Inter', sans-serif;">
+            The model is currently running on hardcoded thresholds, which will affect accuracy. This will be updated in the future.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
     run_btn = st.button("Run Analysis", key="run_analysis", use_container_width=True)
 
     st.markdown(f"""
