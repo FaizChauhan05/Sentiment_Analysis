@@ -524,7 +524,7 @@ with st.sidebar:
     # Updated disclaimer card reflecting the GDELT integration
     st.markdown(f"""
     <div style="background:{C['surface_container_lo']}; border: 1px solid {C['outline_variant']};
-                border-radius: 8px; padding: 8px 10px; margin-top: 6px; margin-bottom: 6px;">
+                border-radius: 8px; padding: 8px 10px; margin-top: 6px; margin-bottom: 20px;">
         <p style="font-size: 10px; font-weight: 700; color: {C['tertiary']}; margin: 0 0 4px 0;
                   display: flex; align-items: center; gap: 4px; font-family: 'Inter', sans-serif;">
             {_icon('info', 14, C['tertiary'])} Pipeline Configuration
@@ -541,7 +541,7 @@ with st.sidebar:
     # Warning card about hardcoded thresholds
     st.markdown(f"""
     <div style="background:{C['error_container']}; border: 1px solid {C['error']};
-                border-radius: 8px; padding: 12px; margin-top: 6px; margin-bottom: 6px;">
+                border-radius: 8px; padding: 12px; margin-top: 14px; margin-bottom: 12px;">
         <p style="font-size: 11px; font-weight: 700; color: {C['error']}; margin: 0 0 6px 0;
                   display: flex; align-items: center; gap: 6px; font-family: 'Inter', sans-serif;">
             {_icon('warning', 16, C['error'])} Model Notice
