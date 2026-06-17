@@ -323,6 +323,7 @@ h1, h2, h3, h4 {{
 /* ─── Brand ─── */
 .brand {{
     display: flex; align-items: center; gap: 12px;
+    margin-top: -3.5rem !important;
     margin-bottom: 20px; padding-bottom: 16px;
     border-bottom: 1px solid {C['outline_variant']};
 }}
@@ -382,8 +383,10 @@ section[data-testid="stSidebar"] .stRadio label {{
 }}
 
 /* ─── Sidebar Padding Adjustment ─── */
-[data-testid="stSidebarContent"], [data-testid="stSidebarUserContent"] {{
-    padding-top: 1rem !important;
+[data-testid="stSidebarContent"], [data-testid="stSidebarUserContent"], [data-testid="stSidebarHeader"] {{
+    padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
+    margin-top: 0rem !important;
 }}
 
 /* ─── Details/Accordion Styles ─── */
