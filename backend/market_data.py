@@ -11,7 +11,11 @@ def market_data(df):
     Close = []
     Volume = []
     movement = []
-
+    earnings_per_share = []
+    revenue_growth = []
+    free_cash_flow = []
+    net_margins = []
+    return_on_equity = []
     def get_stock_data(
         ticker_symbol,
         start_date,
@@ -33,7 +37,11 @@ def market_data(df):
             Close.append("No data")
             Volume.append("No data")
             movement.append("No data")
-
+            earnings_per_share.append(0.0)
+            revenue_growth.append(0.0)
+            free_cash_flow.append(0.0)
+            net_margins.append(0.0)
+            return_on_equity.append(0.0)
         else:
 
             olhcv_data = stock_data[
@@ -53,6 +61,11 @@ def market_data(df):
                 current_close = olhcv_data['Close'].iloc[-1]
             else:
                 movement.append("No data")
+                earnings_per_share.append(0.0)
+                revenue_growth.append(0.0)
+                free_cash_flow.append(0.0)
+                net_margins.append(0.0)
+                return_on_equity.append(0.0)
                 return
 
             if current_close > previous_close:
@@ -61,7 +74,14 @@ def market_data(df):
                 movement.append('Stock price went down')
             else:
                 movement.append('Stock price remained unchanged')
-    
+
+            fin_info = ticker_symbol.info
+
+            earnings_per_share.append(fin_info.get('trailingEps', 0.0))
+            revenue_growth.append(fin_info.get('revenueGrowth', 0.0))
+            free_cash_flow.append(fin_info.get('freeCashflow', 0))
+            net_margins.append(fin_info.get('profitMargins', 0.0))
+            return_on_equity.append(fin_info.get('returnOnEquity', 0.0))   
             
 
     market_close_hour = 16
@@ -115,6 +135,11 @@ def market_data(df):
     df['Volume'] = Volume
     df['Movement'] = movement
 
+    df['EPS'] = earnings_per_share
+    df['Revenue_Growth'] = revenue_growth
+    df['Free_Cash_Flow'] = free_cash_flow
+    df['Net_Profit_Margin'] = net_margins
+    df['ROE'] = return_on_equity
     df = df[df['Movement'] != 'No data'].copy()
 
     return df
