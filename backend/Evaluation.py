@@ -1,39 +1,12 @@
-"""
-Prediction evaluation module for SentiCore.
-
-Compares FinBERT sentiment-based movement predictions against actual
-stock market movements, returning a comprehensive analytics dictionary
-for the dashboard.
-"""
-
 import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from sklearn.metrics import (
-    confusion_matrix,
-    classification_report,
-    ConfusionMatrixDisplay,
-)
+from sklearn.metrics import confusion_matrix,classification_report,ConfusionMatrixDisplay
 
 
 def evaluate_predictions(df: pd.DataFrame) -> dict:
-    """
-    Evaluate sentiment-based predictions against actual market movements.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame with 'Movement' (actual) and 'Predictions' (predicted)
-        columns, plus OHLCV market data columns.
-
-    Returns
-    -------
-    dict with keys:
-        accuracy, total_articles, correct_predictions, incorrect_predictions,
-        movement_distribution, prediction_distribution, latest_market_data,
-        per_class_metrics, daily_accuracy
-    """
+  
     y_true = df["Movement"]
     y_pred = df["Predictions"]
 
@@ -101,4 +74,11 @@ def evaluate_predictions(df: pd.DataFrame) -> dict:
         },
         "per_class_metrics": per_class_metrics,
         "daily_accuracy": daily_accuracy,
+
+        "corporate_financials": {
+        "eps": round(float(df["EPS"].iloc[-1]), 2),
+        "revenue_growth_pct": round(float(df["Revenue_Growth"].iloc[-1]) * 100, 2), 
+        "net_margin_pct": round(float(df["Net_Profit_Margin"].iloc[-1]) * 100, 2),
+        "roe_pct": round(float(df["ROE"].iloc[-1]) * 100, 2)
+    }
     }

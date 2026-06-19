@@ -21,8 +21,8 @@ def aggregate_data(df):
 
     df['date'] = pd.to_datetime(
     df['published_at'],
-    utc=True
-).dt.normalize()
+    utc=True).dt.normalize()
+    
     aggregated_df = df.groupby(['ticker', 'date'])[['Aggregate_Score']].mean().reset_index()
 
     return aggregated_df
