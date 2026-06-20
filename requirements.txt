@@ -1,5 +1,5 @@
---extra-index-url https://download.pytorch.org/whl/cpu
-fastapi==0.137.0
+fastapi==0.138.0
+joblib==1.5.3
 matplotlib==3.11.0
 numpy==2.4.6
 pandas==3.0.3
@@ -9,7 +9,5 @@ python-dotenv==1.2.2
 Requests==2.34.2
 scikit_learn==1.9.0
 streamlit==1.56.0
-torch
-torchvision
-transformers==5.8.1
+xgboost==3.3.0
 yfinance==1.2.1
