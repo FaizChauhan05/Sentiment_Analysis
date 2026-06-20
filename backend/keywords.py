@@ -4,7 +4,6 @@ from typing import List, Tuple
 
 import pandas as pd
 
-# Common English stop words + financial noise words that add no analytical value
 _STOP_WORDS = frozenset({
     "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
     "of", "with", "by", "is", "are", "was", "were", "be", "been", "has",
@@ -40,7 +39,6 @@ def extract_keywords(
     headlines: pd.Series,
     top_n: int = 12,
 ) -> List[Tuple[str, int]]:
-   
     word_counts: Counter = Counter()
 
     for headline in headlines.dropna():
@@ -56,7 +54,6 @@ def extract_bigrams(
     headlines: pd.Series,
     top_n: int = 6,
 ) -> List[Tuple[str, int]]:
-   
     bigram_counts: Counter = Counter()
 
     for headline in headlines.dropna():

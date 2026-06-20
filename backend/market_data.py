@@ -16,19 +16,14 @@ def market_data(df):
     free_cash_flow = []
     net_margins = []
     return_on_equity = []
-    def get_stock_data(
-        ticker_symbol,
-        start_date,
-        end_date
-    ):
+    pe_list = []
+    peg_list = []
+    debt_equity_list = []
+    def get_stock_data(ticker_symbol, start_date, end_date):
 
-        stock_data = yf.Ticker(
-            ticker_symbol
-        ).history(
-            start=start_date,
-            end=end_date,
-            interval='1d'
-        )
+        ticker_obj = yf.Ticker(ticker_symbol)
+        stock_data = ticker_obj.history(start = start_date, end = end_date, interval = '1d')
+
         if stock_data.empty:
 
             Open.append("No data")
@@ -42,20 +37,19 @@ def market_data(df):
             free_cash_flow.append(0.0)
             net_margins.append(0.0)
             return_on_equity.append(0.0)
+            pe_list.append(0.0)
+            peg_list.append(0.0)
+            debt_equity_list.append(0.0)
         else:
 
-            olhcv_data = stock_data[
-                ['Open', 'High', 'Low', 'Close', 'Volume']
-            ]
+            olhcv_data = stock_data[['Open', 'High', 'Low', 'Close', 'Volume']]
 
-            # Append latest available OHLCV (use last row)
             Open.append(olhcv_data['Open'].iloc[-1])
             High.append(olhcv_data['High'].iloc[-1])
             Low.append(olhcv_data['Low'].iloc[-1])
             Close.append(olhcv_data['Close'].iloc[-1])
             Volume.append(olhcv_data['Volume'].iloc[-1])
 
-            # Determine movement comparing last two closes if possible
             if len(olhcv_data) >= 2:
                 previous_close = olhcv_data['Close'].iloc[-2]
                 current_close = olhcv_data['Close'].iloc[-1]
@@ -66,6 +60,9 @@ def market_data(df):
                 free_cash_flow.append(0.0)
                 net_margins.append(0.0)
                 return_on_equity.append(0.0)
+                pe_list.append(0.0)
+                peg_list.append(0.0)
+                debt_equity_list.append(0.0)
                 return
 
             if current_close > previous_close:
@@ -75,22 +72,21 @@ def market_data(df):
             else:
                 movement.append('Stock price remained unchanged')
 
-            fin_info = ticker_symbol.info
+            fin_info = ticker_obj.info
 
             earnings_per_share.append(fin_info.get('trailingEps', 0.0))
             revenue_growth.append(fin_info.get('revenueGrowth', 0.0))
             free_cash_flow.append(fin_info.get('freeCashflow', 0))
             net_margins.append(fin_info.get('profitMargins', 0.0))
-            return_on_equity.append(fin_info.get('returnOnEquity', 0.0))   
-            
+            return_on_equity.append(fin_info.get('returnOnEquity', 0.0))
+            pe_list.append(fin_info.get('trailingPE', 0.0))
+            peg_list.append(fin_info.get('pegRatio', 0.0))
+            debt_equity_list.append(fin_info.get('debtToEquity', 0.0))
+
 
     market_close_hour = 16
 
-    
-    df['date'] = pd.to_datetime(
-        df['date'],
-        utc=True
-    )
+    df['date'] = pd.to_datetime(df['date'], utc = True)
 
     for index, row in df.iterrows():
 
@@ -140,6 +136,11 @@ def market_data(df):
     df['Free_Cash_Flow'] = free_cash_flow
     df['Net_Profit_Margin'] = net_margins
     df['ROE'] = return_on_equity
+
+    df['PE_Ratio'] = pe_list
+    df['PEG_Ratio'] = peg_list
+    df['Debt_to_Equity'] = debt_equity_list
+
     df = df[df['Movement'] != 'No data'].copy()
 
     return df

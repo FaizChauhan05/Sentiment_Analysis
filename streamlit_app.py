@@ -1,3 +1,4 @@
+import xgboost
 import os
 os.environ["TRANSFORMERS_VERBOSITY"] = "error"
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
@@ -496,7 +497,7 @@ with st.sidebar:
 
     page = st.radio(
         "Navigation",
-        ["Overview", "Analysis", "Mentions", "Reports"],
+        ["Overview", "Analysis", "Mentions", "Reports", "Company Financials"],
         label_visibility="collapsed",
         key="nav_page",
     )
@@ -694,9 +695,24 @@ def _empty_reports():
                     display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px;">
             {_icon('assessment', 32, C['primary'])}
         </div>
-        <h3 style="font-size:22px;font-weight:700;margin-bottom:8px;color:{C['on_surface']};">Reports & Analytics</h3>
+        <h3 style="font-size:22px;font-weight:700;margin-bottom:8px;color:{C['on_surface']};">Reports &amp; Analytics</h3>
         <p style="color:{C['on_surface_variant']};font-size:14px;max-width:460px;margin:0 auto 28px auto;line-height:1.6;">
             Waiting for evaluation metrics. Run the analysis to generate reports and confusion matrices.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def _empty_financials():
+    st.markdown(f"""
+    <div style="text-align:center;padding:80px 20px;">
+        <div style="width:64px;height:64px;background:{C['surface_container']};border-radius:16px;
+                    display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px;">
+            {_icon('account_balance', 32, C['primary'])}
+        </div>
+        <h3 style="font-size:22px;font-weight:700;margin-bottom:8px;color:{C['on_surface']};">Company Financials</h3>
+        <p style="color:{C['on_surface_variant']};font-size:14px;max-width:460px;margin:0 auto 28px auto;line-height:1.6;">
+            Waiting for financial data. Run the analysis to view key company financial metrics pulled via Yahoo Finance.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -1240,10 +1256,226 @@ def pg_reports():
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# PAGE 5 — COMPANY FINANCIALS
+# ══════════════════════════════════════════════════════════════════════════════
+def pg_financials():
+    st.markdown(_page_header(
+        "Financials", "Company Financials",
+        "Key financial metrics sourced from Yahoo Finance via yfinance."),
+        unsafe_allow_html=True)
+
+    if not st.session_state.analysis_done:
+        _empty_financials(); return
+
+    R  = st.session_state.results
+    tk = st.session_state.ticker
+    cf = R.get("corporate_financials", {})
+    vm = cf.get("valuation_metrics", {})
+
+    eps    = cf.get("eps", 0.0)
+    rev_g  = cf.get("revenue_growth_pct", 0.0)
+    margin = cf.get("net_margin_pct", 0.0)
+    roe    = cf.get("roe_pct", 0.0)
+    pe     = vm.get("pe_ratio", 0.0)
+    peg    = vm.get("peg_ratio", 0.0)
+    de     = vm.get("debt_to_equity_pct", 0.0)
+
+    # ── Row 1: Profitability KPI Cards ─────────────────────────────────────────
+    c1, c2, c3, c4 = st.columns(4)
+
+    with c1:
+        eps_clr = C["pos"] if eps >= 0 else C["neg"]
+        st.markdown(f"""
+        <div class="sc-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                <div class="icon-box">{_icon('attach_money', 22, C['primary'])}</div>
+                <span style="font-size:11px;font-weight:700;color:{eps_clr};font-family:'JetBrains Mono',monospace;">
+                    {'▲' if eps >= 0 else '▼'}
+                </span>
+            </div>
+            <p style="color:{C['on_surface_variant']};font-weight:600;font-size:13px;margin:0 0 4px 0;">Earnings Per Share</p>
+            <p class="metric-lg">${eps:.2f}</p>
+            <div class="prog"><div class="prog-fill" style="width:{min(abs(eps)*10,100):.0f}%;background:{eps_clr};"></div></div>
+        </div>""", unsafe_allow_html=True)
+
+    with c2:
+        rev_clr = C["pos"] if rev_g >= 0 else C["neg"]
+        st.markdown(f"""
+        <div class="sc-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                <div class="icon-box">{_icon('trending_up', 22, C['primary'])}</div>
+                <span style="font-size:11px;font-weight:700;color:{rev_clr};font-family:'JetBrains Mono',monospace;">
+                    {'▲' if rev_g >= 0 else '▼'} {abs(rev_g):.2f}%
+                </span>
+            </div>
+            <p style="color:{C['on_surface_variant']};font-weight:600;font-size:13px;margin:0 0 4px 0;">Revenue Growth</p>
+            <p class="metric-lg">{rev_g:+.2f}%</p>
+            <div class="prog"><div class="prog-fill" style="width:{min(abs(rev_g),100):.0f}%;background:{rev_clr};"></div></div>
+        </div>""", unsafe_allow_html=True)
+
+    with c3:
+        mar_clr = C["pos"] if margin >= 0 else C["neg"]
+        st.markdown(f"""
+        <div class="sc-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                <div class="icon-box">{_icon('pie_chart', 22, C['primary'])}</div>
+                <span style="font-size:11px;font-weight:700;color:{mar_clr};font-family:'JetBrains Mono',monospace;">
+                    {'▲' if margin >= 0 else '▼'} {abs(margin):.2f}%
+                </span>
+            </div>
+            <p style="color:{C['on_surface_variant']};font-weight:600;font-size:13px;margin:0 0 4px 0;">Net Profit Margin</p>
+            <p class="metric-lg">{margin:+.2f}%</p>
+            <div class="prog"><div class="prog-fill" style="width:{min(abs(margin),100):.0f}%;background:{mar_clr};"></div></div>
+        </div>""", unsafe_allow_html=True)
+
+    with c4:
+        roe_clr = C["pos"] if roe >= 0 else C["neg"]
+        st.markdown(f"""
+        <div class="sc-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                <div class="icon-box">{_icon('account_balance_wallet', 22, C['primary'])}</div>
+                <span style="font-size:11px;font-weight:700;color:{roe_clr};font-family:'JetBrains Mono',monospace;">
+                    {'▲' if roe >= 0 else '▼'} {abs(roe):.2f}%
+                </span>
+            </div>
+            <p style="color:{C['on_surface_variant']};font-weight:600;font-size:13px;margin:0 0 4px 0;">Return on Equity</p>
+            <p class="metric-lg">{roe:+.2f}%</p>
+            <div class="prog"><div class="prog-fill" style="width:{min(abs(roe),100):.0f}%;background:{roe_clr};"></div></div>
+        </div>""", unsafe_allow_html=True)
+
+    st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
+
+    # ── Row 2: Valuation KPI Cards ─────────────────────────────────────────────
+    v1, v2, v3 = st.columns(3)
+
+    with v1:
+        pe_clr = C["neu"] if pe > 0 else C["neg"]
+        st.markdown(f"""
+        <div class="sc-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                <div class="icon-box">{_icon('show_chart', 22, C['primary'])}</div>
+                <span class="label-caps">VALUATION</span>
+            </div>
+            <p style="color:{C['on_surface_variant']};font-weight:600;font-size:13px;margin:0 0 4px 0;">P/E Ratio (Trailing)</p>
+            <p class="metric-lg">{pe:.2f}x</p>
+            <div class="prog"><div class="prog-fill" style="width:{min(pe,100):.0f}%;background:{pe_clr};"></div></div>
+        </div>""", unsafe_allow_html=True)
+
+    with v2:
+        peg_clr = C["pos"] if 0 < peg <= 1 else (C["neu"] if peg <= 2 else C["neg"])
+        st.markdown(f"""
+        <div class="sc-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                <div class="icon-box">{_icon('speed', 22, C['primary'])}</div>
+                <span class="label-caps">GROWTH ADJ.</span>
+            </div>
+            <p style="color:{C['on_surface_variant']};font-weight:600;font-size:13px;margin:0 0 4px 0;">PEG Ratio</p>
+            <p class="metric-lg">{peg:.2f}x</p>
+            <div class="prog"><div class="prog-fill" style="width:{min(peg*33,100):.0f}%;background:{peg_clr};"></div></div>
+        </div>""", unsafe_allow_html=True)
+
+    with v3:
+        de_clr = C["pos"] if de < 100 else (C["neu"] if de < 200 else C["neg"])
+        st.markdown(f"""
+        <div class="sc-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                <div class="icon-box">{_icon('account_balance', 22, C['primary'])}</div>
+                <span class="label-caps">LEVERAGE</span>
+            </div>
+            <p style="color:{C['on_surface_variant']};font-weight:600;font-size:13px;margin:0 0 4px 0;">Debt-to-Equity</p>
+            <p class="metric-lg">{de:.2f}%</p>
+            <div class="prog"><div class="prog-fill" style="width:{min(de/3,100):.0f}%;background:{de_clr};"></div></div>
+        </div>""", unsafe_allow_html=True)
+
+    st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
+
+    # ── Bar Chart: percentage-based metrics ────────────────────────────────────
+    with st.container(border=True):
+        st.markdown('<p class="headline-md" style="margin:0;">Financial Metrics Overview</p>', unsafe_allow_html=True)
+        st.markdown(f'<p style="font-size:13px;color:{C["on_surface_variant"]};margin-top:0px;margin-bottom:16px;">Percentage-based metrics for <strong>{tk}</strong> — sourced from Yahoo Finance</p>', unsafe_allow_html=True)
+
+        metric_names  = ["Revenue Growth", "Net Profit Margin", "Return on Equity"]
+        metric_values = [rev_g, margin, roe]
+        bar_colors    = [
+            C["pos"] if v >= 0 else C["neg"]
+            for v in metric_values
+        ]
+
+        fig = go.Figure(data=[go.Bar(
+            x=metric_names,
+            y=metric_values,
+            marker=dict(color=bar_colors, cornerradius=6),
+            text=[f"{v:+.2f}%" for v in metric_values],
+            textposition="outside",
+            textfont=dict(family="JetBrains Mono, monospace", size=12, color=C["on_surface"]),
+            hovertemplate="<b>%{x}</b><br>Value: %{y:+.2f}%<extra></extra>",
+        )])
+        fig.add_hline(y=0, line_dash="dot", line_color=C["outline"], opacity=0.5)
+        ly = _plotly_base(height=340)
+        ly["showlegend"] = False
+        ly["yaxis"]["ticksuffix"] = "%"
+        fig.update_layout(**ly)
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+    st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
+
+    # ── Detail Table ───────────────────────────────────────────────────────────
+    with st.container(border=True):
+        st.markdown('<p class="headline-md" style="margin:0 0 16px 0;">Financials Detail</p>', unsafe_allow_html=True)
+
+        rows = [
+            ("Earnings Per Share (EPS)",   f"${eps:.2f}",     "Trailing twelve-month EPS",             "attach_money"),
+            ("Revenue Growth",             f"{rev_g:+.2f}%",  "YoY revenue growth rate",               "trending_up"),
+            ("Net Profit Margin",          f"{margin:+.2f}%", "Net income as % of revenue",            "pie_chart"),
+            ("Return on Equity (ROE)",     f"{roe:+.2f}%",    "Net income / shareholders equity",      "account_balance_wallet"),
+            ("P/E Ratio (Trailing)",       f"{pe:.2f}x",      "Price / trailing twelve-month earnings", "show_chart"),
+            ("PEG Ratio",                  f"{peg:.2f}x",     "P/E ratio adjusted for growth rate",    "speed"),
+            ("Debt-to-Equity",             f"{de:.2f}%",      "Total debt / shareholders equity",      "account_balance"),
+        ]
+
+        html = _table_header("Metric", "Value", "Description", align_last_right=False)
+        for label, val, desc, ico in rows:
+            html += f"""
+            <tr style="border-bottom:1px solid {C['outline_variant']};">
+                <td style="padding:14px 16px;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div class="icon-box" style="width:32px;height:32px;border-radius:6px;">
+                            {_icon(ico, 16, C['primary'])}
+                        </div>
+                        <span style="font-weight:600;color:{C['on_surface']};">{label}</span>
+                    </div>
+                </td>
+                <td style="padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:14px;
+                           font-weight:700;color:{C['primary']};">{val}</td>
+                <td style="padding:14px 16px;color:{C['on_surface_variant']};font-size:13px;">{desc}</td>
+            </tr>"""
+        html += "</tbody></table>"
+        st.markdown(html, unsafe_allow_html=True)
+
+    st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
+
+    # ── Info note ──────────────────────────────────────────────────────────────
+    st.markdown(f"""
+    <div class="info-box">
+        <p class="info-title">{_icon('info', 16, C['primary'])} &nbsp;Data Source</p>
+        <p class="info-text">
+            All financial metrics are sourced from <strong>Yahoo Finance</strong> via the
+            <code style="font-family:'JetBrains Mono',monospace;font-size:11px;">yfinance</code> library.
+            Values reflect the latest available trailing-twelve-month (TTM) data for
+            <strong>{tk}</strong> and are normalised to percentage form where applicable.
+            EPS is reported in USD. P/E and PEG ratios are dimensionless multiples.
+            Debt-to-Equity is expressed as a percentage. Data may lag by one trading day.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # ROUTER
 # ══════════════════════════════════════════════════════════════════════════════
 {"Overview": pg_overview, "Analysis": pg_analysis,
- "Mentions": pg_mentions, "Reports": pg_reports}[page]()
+ "Mentions": pg_mentions, "Reports": pg_reports,
+ "Company Financials": pg_financials}[page]()
 
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("---")

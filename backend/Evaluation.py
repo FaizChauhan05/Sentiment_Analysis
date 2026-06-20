@@ -6,26 +6,22 @@ from sklearn.metrics import confusion_matrix,classification_report,ConfusionMatr
 
 
 def evaluate_predictions(df: pd.DataFrame) -> dict:
-  
     y_true = df["Movement"]
     y_pred = df["Predictions"]
 
     labels = ["up", "down", "unchanged"]
 
-    # Core confusion matrix (side effect: saves plot)
     cm = confusion_matrix(y_true, y_pred, labels=labels)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
     disp.plot(cmap="Blues")
     plt.title("Confusion Matrix for Stock Movement Prediction")
 
-    # Accuracy
     correct_mask = y_true == y_pred
     accuracy = correct_mask.mean() * 100
     total_predictions = len(df)
     correct_predictions = int(correct_mask.sum())
     incorrect_predictions = total_predictions - correct_predictions
 
-    # Per-class precision/recall/f1 via classification_report
     report = classification_report(y_true, y_pred, labels=labels, output_dict=True, zero_division=0)
     per_class_metrics = {}
     for label in labels:
@@ -37,7 +33,6 @@ def evaluate_predictions(df: pd.DataFrame) -> dict:
                 "support": int(report[label]["support"]),
             }
 
-    # Daily accuracy (how accurate was each day's prediction)
     daily_accuracy = []
     if "date" in df.columns:
         for d, grp in df.groupby("date"):
@@ -74,11 +69,15 @@ def evaluate_predictions(df: pd.DataFrame) -> dict:
         },
         "per_class_metrics": per_class_metrics,
         "daily_accuracy": daily_accuracy,
-
         "corporate_financials": {
-        "eps": round(float(df["EPS"].iloc[-1]), 2),
-        "revenue_growth_pct": round(float(df["Revenue_Growth"].iloc[-1]) * 100, 2), 
-        "net_margin_pct": round(float(df["Net_Profit_Margin"].iloc[-1]) * 100, 2),
-        "roe_pct": round(float(df["ROE"].iloc[-1]) * 100, 2)
-    }
+            "eps": round(float(df["EPS"].iloc[-1]), 2),
+            "revenue_growth_pct": round(float(df["Revenue_Growth"].iloc[-1]) * 100, 2),
+            "net_margin_pct": round(float(df["Net_Profit_Margin"].iloc[-1]) * 100, 2),
+            "roe_pct": round(float(df["ROE"].iloc[-1]) * 100, 2),
+        },
+        "valuation_metrics": {
+            "pe_ratio": round(float(df["PE_Ratio"].iloc[-1]), 2),
+            "peg_ratio": round(float(df["PEG_Ratio"].iloc[-1]), 2),
+            "debt_to_equity_pct": round(float(df["Debt_to_Equity"].iloc[-1]), 2),
+        },
     }

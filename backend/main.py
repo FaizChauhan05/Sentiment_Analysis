@@ -20,17 +20,15 @@ class AnalyzeRequest(BaseModel):
 
 @app.post("/analyze")
 def analyze_stock(data: AnalyzeRequest):
-
     news_df = fetch_gdelt_news(
         data.ticker,
         data.start_date,
         data.end_date
     )
     if news_df.empty:
-     return {
-        "error": "No news articles found for selected ticker/date range"
+        return {
+            "error": "No news articles found for selected ticker/date range"
         }
-
 
     sentiment_df = sentiment_analysis(news_df)
 

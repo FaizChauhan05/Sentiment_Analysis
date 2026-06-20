@@ -1,69 +1,64 @@
 import os
 import time
-import logging
-
-# Suppress noisy transformers warnings before importing
-os.environ["TRANSFORMERS_VERBOSITY"] = "error"
-os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
-logging.getLogger("transformers").setLevel(logging.ERROR)
-
+import requests
+import pandas as pd
 import streamlit as st
-from transformers import BertTokenizer, BertForSequenceClassification
-import torch
-import torch.nn.functional as F
+from dotenv import load_dotenv
 
-MAX_RETRIES = 3
-RETRY_DELAY = 30  # seconds between retries on rate-limit
+load_dotenv()
 
-@st.cache_resource
-def load_finbert_model():
-    model_name = 'ProsusAI/finbert'
 
-    for attempt in range(1, MAX_RETRIES + 1):
-        try:
-            tokenizer = BertTokenizer.from_pretrained(model_name)
-            model = BertForSequenceClassification.from_pretrained(model_name)
-            model.eval()
-            return tokenizer, model
-        except Exception as exc:
-            if "429" in str(exc) or "rate" in str(exc).lower() or "Too Many Requests" in str(exc):
-                if attempt < MAX_RETRIES:
-                    st.warning(
-                        f"HuggingFace rate-limited (attempt {attempt}/{MAX_RETRIES}). "
-                        f"Retrying in {RETRY_DELAY}s..."
-                    )
-                    time.sleep(RETRY_DELAY)
-                else:
-                    raise RuntimeError(
-                        "HuggingFace rate limit exceeded after multiple retries. "
-                        "Please wait a few minutes and try again."
-                    ) from exc
-            else:
-                raise
+HF_TOKEN = st.secrets.get("HF_TOKEN") or os.getenv("HF_TOKEN")
+API_URL = "https://api-inference.huggingface.co/models/ProsusAI/finbert"
+headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+
+def query_finbert_api(payload, retries=3):
+    for attempt in range(retries):
+        response = requests.post(API_URL, headers=headers, json=payload)
+        if response.status_code == 200:
+            return response.json()
+        elif "estimated_time" in response.text:
+            # The API is waking the model up from sleep; wait and retry
+            wait_time = response.json().get("estimated_time", 10)
+            print(f"[API] Waking up FinBERT. Waiting {wait_time:.1f} seconds...")
+            time.sleep(wait_time)
+        else:
+            time.sleep(2)
+            
+    raise Exception(f"API Error after retries: {response.text}")
 
 def sentiment_analysis(df):
-    if df.empty:
+    if df.empty or 'headline' not in df.columns:
         return df
         
-    tokenizer, model = load_finbert_model()
-    df = df.drop(columns=['description', 'url'], errors='ignore')
+    df = df.dropna(subset=['headline']).copy()
+    headlines = df['headline'].astype(str).tolist()
     
-    Sentiment = []
-    Confidence = []
+    all_sentiments = []
+    all_confidences = []
 
-    for index, row in df.iterrows():
-        headline = row['headline']
-        inputs = tokenizer(headline, truncation=True, return_tensors="pt")
-        
-        with torch.no_grad():
-            logit = model(**inputs)
-            probabilities = F.softmax(logit.logits, dim=1)
-            predicted_label = int(torch.argmax(probabilities).item())
+    # Send data to the API in chunks of 100 to prevent payload timeouts
+    BATCH_SIZE = 100
+    print(f"[Sentiment] Routing {len(headlines)} articles to Hugging Face API...")
+    
+    for i in range(0, len(headlines), BATCH_SIZE):
+        batch = headlines[i : i + BATCH_SIZE]
+        try:
+            api_results = query_finbert_api({"inputs": batch})
             
-            Sentiment.append(model.config.id2label[predicted_label])
-            Confidence.append(f"{probabilities[0][predicted_label].item():.3f}")
+            
+            for result in api_results:
+                top_prediction = result[0] 
+                all_sentiments.append(top_prediction['label'])
+                all_confidences.append(top_prediction['score'])
+                
+        except Exception as e:
+            print(f"[Sentiment] Batch failed: {e}")
+            
+            all_sentiments.extend(['neutral'] * len(batch))
+            all_confidences.extend([0.0] * len(batch))
+            
+    df['Sentiment'] = all_sentiments
+    df['Confidence'] = all_confidences
 
-    df['Sentiment'] = Sentiment
-    df['Confidence'] = Confidence
-    
     return df
