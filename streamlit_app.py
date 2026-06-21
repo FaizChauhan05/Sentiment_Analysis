@@ -1,7 +1,5 @@
 import xgboost
 import os
-os.environ["TRANSFORMERS_VERBOSITY"] = "error"
-os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 
 import streamlit as st
 import pandas as pd
@@ -1220,10 +1218,16 @@ def pg_reports():
 
     with tabs[2]:
         with st.container(border=True):
+            st.markdown(f"""
+            <p style="font-size:13px;color:{C['on_surface_variant']};margin:0 0 16px 0;">
+                Movement distributions are counted after grouping article sentiment by trading day.
+                Total Articles remains the raw headline count.
+            </p>
+            """, unsafe_allow_html=True)
             d1, d2 = st.columns(2)
             for col, (title, dist) in zip([d1, d2],
-                [("Actual Movement", R["movement_distribution"]),
-                 ("Predicted Movement", R["prediction_distribution"])]):
+                [("Actual Movement by Day", R["movement_distribution"]),
+                 ("Predicted Movement by Day", R["prediction_distribution"])]):
                 with col:
                     st.markdown(f'<p class="headline-md" style="margin:0 0 16px 0;">{title}</p>', unsafe_allow_html=True)
                     fg = go.Figure(data=[go.Bar(
@@ -1270,7 +1274,7 @@ def pg_financials():
     R  = st.session_state.results
     tk = st.session_state.ticker
     cf = R.get("corporate_financials", {})
-    vm = cf.get("valuation_metrics", {})
+    vm = R.get("valuation_metrics", {})
 
     eps    = cf.get("eps", 0.0)
     rev_g  = cf.get("revenue_growth_pct", 0.0)
@@ -1279,6 +1283,11 @@ def pg_financials():
     pe     = vm.get("pe_ratio", 0.0)
     peg    = vm.get("peg_ratio", 0.0)
     de     = vm.get("debt_to_equity_pct", 0.0)
+
+    def _fmt_optional(value: float, suffix: str = "") -> str:
+        if value is None or not pd.notna(value) or value == 0:
+            return "N/A"
+        return f"{value:.2f}{suffix}"
 
     # ── Row 1: Profitability KPI Cards ─────────────────────────────────────────
     c1, c2, c3, c4 = st.columns(4)
@@ -1349,7 +1358,8 @@ def pg_financials():
     v1, v2, v3 = st.columns(3)
 
     with v1:
-        pe_clr = C["neu"] if pe > 0 else C["neg"]
+        pe_clr = C["neu"] if pd.notna(pe) and pe > 0 else C["outline"]
+        pe_disp = _fmt_optional(pe, "x")
         st.markdown(f"""
         <div class="sc-card">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
@@ -1357,12 +1367,13 @@ def pg_financials():
                 <span class="label-caps">VALUATION</span>
             </div>
             <p style="color:{C['on_surface_variant']};font-weight:600;font-size:13px;margin:0 0 4px 0;">P/E Ratio (Trailing)</p>
-            <p class="metric-lg">{pe:.2f}x</p>
-            <div class="prog"><div class="prog-fill" style="width:{min(pe,100):.0f}%;background:{pe_clr};"></div></div>
+            <p class="metric-lg">{pe_disp}</p>
+            <div class="prog"><div class="prog-fill" style="width:{min(pe if pd.notna(pe) else 0,100):.0f}%;background:{pe_clr};"></div></div>
         </div>""", unsafe_allow_html=True)
 
     with v2:
-        peg_clr = C["pos"] if 0 < peg <= 1 else (C["neu"] if peg <= 2 else C["neg"])
+        peg_clr = C["pos"] if pd.notna(peg) and 0 < peg <= 1 else (C["neu"] if pd.notna(peg) and peg <= 2 else C["outline"])
+        peg_disp = _fmt_optional(peg, "x")
         st.markdown(f"""
         <div class="sc-card">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
@@ -1370,12 +1381,13 @@ def pg_financials():
                 <span class="label-caps">GROWTH ADJ.</span>
             </div>
             <p style="color:{C['on_surface_variant']};font-weight:600;font-size:13px;margin:0 0 4px 0;">PEG Ratio</p>
-            <p class="metric-lg">{peg:.2f}x</p>
-            <div class="prog"><div class="prog-fill" style="width:{min(peg*33,100):.0f}%;background:{peg_clr};"></div></div>
+            <p class="metric-lg">{peg_disp}</p>
+            <div class="prog"><div class="prog-fill" style="width:{min((peg if pd.notna(peg) else 0)*33,100):.0f}%;background:{peg_clr};"></div></div>
         </div>""", unsafe_allow_html=True)
 
     with v3:
-        de_clr = C["pos"] if de < 100 else (C["neu"] if de < 200 else C["neg"])
+        de_clr = C["pos"] if pd.notna(de) and de < 100 else (C["neu"] if pd.notna(de) and de < 200 else C["outline"])
+        de_disp = _fmt_optional(de, "%")
         st.markdown(f"""
         <div class="sc-card">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
@@ -1383,8 +1395,8 @@ def pg_financials():
                 <span class="label-caps">LEVERAGE</span>
             </div>
             <p style="color:{C['on_surface_variant']};font-weight:600;font-size:13px;margin:0 0 4px 0;">Debt-to-Equity</p>
-            <p class="metric-lg">{de:.2f}%</p>
-            <div class="prog"><div class="prog-fill" style="width:{min(de/3,100):.0f}%;background:{de_clr};"></div></div>
+            <p class="metric-lg">{de_disp}</p>
+            <div class="prog"><div class="prog-fill" style="width:{min((de if pd.notna(de) else 0)/3,100):.0f}%;background:{de_clr};"></div></div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
@@ -1428,9 +1440,9 @@ def pg_financials():
             ("Revenue Growth",             f"{rev_g:+.2f}%",  "YoY revenue growth rate",               "trending_up"),
             ("Net Profit Margin",          f"{margin:+.2f}%", "Net income as % of revenue",            "pie_chart"),
             ("Return on Equity (ROE)",     f"{roe:+.2f}%",    "Net income / shareholders equity",      "account_balance_wallet"),
-            ("P/E Ratio (Trailing)",       f"{pe:.2f}x",      "Price / trailing twelve-month earnings", "show_chart"),
-            ("PEG Ratio",                  f"{peg:.2f}x",     "P/E ratio adjusted for growth rate",    "speed"),
-            ("Debt-to-Equity",             f"{de:.2f}%",      "Total debt / shareholders equity",      "account_balance"),
+            ("P/E Ratio (Trailing)",       _fmt_optional(pe, "x"),  "Price / trailing twelve-month earnings", "show_chart"),
+            ("PEG Ratio",                  _fmt_optional(peg, "x"), "P/E ratio adjusted for growth rate",    "speed"),
+            ("Debt-to-Equity",             _fmt_optional(de, "%"),   "Total debt / shareholders equity",      "account_balance"),
         ]
 
         html = _table_header("Metric", "Value", "Description", align_last_right=False)

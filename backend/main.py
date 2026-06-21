@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from backend.gdelt_fetcher import fetch_gdelt_news
 from backend.sentiment import sentiment_analysis
@@ -20,24 +20,33 @@ class AnalyzeRequest(BaseModel):
 
 @app.post("/analyze")
 def analyze_stock(data: AnalyzeRequest):
-    news_df = fetch_gdelt_news(
-        data.ticker,
-        data.start_date,
-        data.end_date
-    )
-    if news_df.empty:
-        return {
-            "error": "No news articles found for selected ticker/date range"
-        }
+    try:
+        news_df = fetch_gdelt_news(
+            data.ticker,
+            data.start_date,
+            data.end_date
+        )
+        if news_df.empty:
+            raise HTTPException(
+                status_code=404,
+                detail="No news articles found for selected ticker/date range",
+            )
 
-    sentiment_df = sentiment_analysis(news_df)
+        sentiment_df = sentiment_analysis(news_df)
 
-    aggregated_df = aggregate_data(sentiment_df)
-   
-    market_df = market_data(aggregated_df)
+        aggregated_df = aggregate_data(sentiment_df)
+        market_df = market_data(aggregated_df)
+        if market_df.empty:
+            raise HTTPException(
+                status_code=502,
+                detail="Market data could not be retrieved for the selected period",
+            )
 
-    normalized_df = normalize_labels(market_df)
-
-    results = evaluate_predictions(normalized_df)
-
-    return results
+        normalized_df = normalize_labels(market_df)
+        return evaluate_predictions(normalized_df)
+    except HTTPException:
+        raise
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc

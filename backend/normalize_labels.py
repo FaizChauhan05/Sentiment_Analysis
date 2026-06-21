@@ -28,24 +28,36 @@ def normalize_labels(df):
 
     if xgb_model is not None and scaler is not None:
         feature_columns = [
-            "Aggregate_Score", "EPS", "Revenue_Growth", "Free_Cash_Flow", 
+            "Aggregate_Score", "Positive_Ratio", "Negative_Ratio", "Sentiment_Spread", 
+            "Max_Confidence", "Article_Count", "EPS", "Revenue_Growth", "Free_Cash_Flow", 
             "Net_Profit_Margin", "ROE", "PE_Ratio", "PEG_Ratio", "Debt_to_Equity"
         ]
-        
-        X_raw = df[feature_columns]
+
+        X_raw = df[feature_columns].fillna(0)
         X_scaled = scaler.transform(X_raw)
         
-        binary_predictions = xgb_model.predict(X_scaled)
-        
-        
-        predictions = []
-        for pred in binary_predictions:
-            if pred == 1:
-                predictions.append('up')
-            else:
-                predictions.append('down')
+        # Predict 3-class encoded labels: 0=down, 1=unchanged, 2=up
+        predictions_encoded = xgb_model.predict(X_scaled)
+        class_mapping = {0: 'down', 1: 'unchanged', 2: 'up'}
+        model_predictions = np.array([class_mapping[p] for p in predictions_encoded])
 
-        df['Predictions'] = predictions
+        collapse_ratio = max(
+            (model_predictions == 'up').mean(),
+            (model_predictions == 'down').mean(),
+            (model_predictions == 'unchanged').mean(),
+        )
+        if collapse_ratio >= 0.95:
+            fallback_predictions = []
+            for score in df['Aggregate_Score']:
+                if score > 0.3:
+                    fallback_predictions.append('up')
+                elif score < -0.3:
+                    fallback_predictions.append('down')
+                else:
+                    fallback_predictions.append('unchanged')
+            df['Predictions'] = fallback_predictions
+        else:
+            df['Predictions'] = model_predictions
 
     else:
         predictions = []

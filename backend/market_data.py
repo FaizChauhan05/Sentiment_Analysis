@@ -1,6 +1,28 @@
 import pandas as pd
 import yfinance as yf
 from pandas.tseries.offsets import BDay
+from functools import lru_cache
+
+
+@lru_cache(maxsize=32)
+def _get_financial_info(ticker_symbol: str) -> dict:
+    try:
+        return yf.Ticker(ticker_symbol).info or {}
+    except Exception:
+        return {}
+
+
+def _first_number(info: dict, *keys: str, default: float = 0.0) -> float:
+    for key in keys:
+        value = info.get(key)
+        if value is None:
+            continue
+        try:
+            if pd.notna(value):
+                return float(value)
+        except (TypeError, ValueError):
+            continue
+    return default
 
 
 def market_data(df):
@@ -19,10 +41,22 @@ def market_data(df):
     pe_list = []
     peg_list = []
     debt_equity_list = []
+
+    def append_financials(fin_info: dict) -> None:
+        earnings_per_share.append(_first_number(fin_info, "trailingEps"))
+        revenue_growth.append(_first_number(fin_info, "revenueGrowth"))
+        free_cash_flow.append(_first_number(fin_info, "freeCashflow", "freeCashFlow"))
+        net_margins.append(_first_number(fin_info, "profitMargins"))
+        return_on_equity.append(_first_number(fin_info, "returnOnEquity"))
+        pe_list.append(_first_number(fin_info, "trailingPE", "forwardPE"))
+        peg_list.append(_first_number(fin_info, "pegRatio", "trailingPegRatio"))
+        debt_equity_list.append(_first_number(fin_info, "debtToEquity"))
+
     def get_stock_data(ticker_symbol, start_date, end_date):
 
         ticker_obj = yf.Ticker(ticker_symbol)
         stock_data = ticker_obj.history(start = start_date, end = end_date, interval = '1d')
+        fin_info = _get_financial_info(ticker_symbol)
 
         if stock_data.empty:
 
@@ -32,14 +66,7 @@ def market_data(df):
             Close.append("No data")
             Volume.append("No data")
             movement.append("No data")
-            earnings_per_share.append(0.0)
-            revenue_growth.append(0.0)
-            free_cash_flow.append(0.0)
-            net_margins.append(0.0)
-            return_on_equity.append(0.0)
-            pe_list.append(0.0)
-            peg_list.append(0.0)
-            debt_equity_list.append(0.0)
+            append_financials(fin_info)
         else:
 
             olhcv_data = stock_data[['Open', 'High', 'Low', 'Close', 'Volume']]
@@ -55,14 +82,7 @@ def market_data(df):
                 current_close = olhcv_data['Close'].iloc[-1]
             else:
                 movement.append("No data")
-                earnings_per_share.append(0.0)
-                revenue_growth.append(0.0)
-                free_cash_flow.append(0.0)
-                net_margins.append(0.0)
-                return_on_equity.append(0.0)
-                pe_list.append(0.0)
-                peg_list.append(0.0)
-                debt_equity_list.append(0.0)
+                append_financials(fin_info)
                 return
 
             if current_close > previous_close:
@@ -72,16 +92,7 @@ def market_data(df):
             else:
                 movement.append('Stock price remained unchanged')
 
-            fin_info = ticker_obj.info
-
-            earnings_per_share.append(fin_info.get('trailingEps', 0.0))
-            revenue_growth.append(fin_info.get('revenueGrowth', 0.0))
-            free_cash_flow.append(fin_info.get('freeCashflow', 0))
-            net_margins.append(fin_info.get('profitMargins', 0.0))
-            return_on_equity.append(fin_info.get('returnOnEquity', 0.0))
-            pe_list.append(fin_info.get('trailingPE', 0.0))
-            peg_list.append(fin_info.get('pegRatio', 0.0))
-            debt_equity_list.append(fin_info.get('debtToEquity', 0.0))
+            append_financials(fin_info)
 
 
     market_close_hour = 16
