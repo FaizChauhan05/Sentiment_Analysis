@@ -36,7 +36,7 @@ def normalize_labels(df):
         X_raw = df[feature_columns].fillna(0)
         X_scaled = scaler.transform(X_raw)
         
-        # Predict 3-class encoded labels: 0=down, 1=unchanged, 2=up
+        # 0=down, 1=unchanged, 2=up
         predictions_encoded = xgb_model.predict(X_scaled)
         class_mapping = {0: 'down', 1: 'unchanged', 2: 'up'}
         model_predictions = np.array([class_mapping[p] for p in predictions_encoded])

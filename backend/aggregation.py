@@ -24,11 +24,9 @@ def aggregate_data(df):
         utc=True
     ).dt.normalize()
     
-    # Vectorized flags for ratios
     df['is_pos'] = (df['Sentiment'] == 'positive').astype(int)
     df['is_neg'] = (df['Sentiment'] == 'negative').astype(int)
 
-    # Perform daily aggregation
     aggregated_df = df.groupby(['ticker', 'date']).agg(
         Aggregate_Score=('Aggregate_Score', 'mean'),
         Article_Count=('headline', 'count'),
@@ -37,12 +35,10 @@ def aggregate_data(df):
         neg_count=('is_neg', 'sum')
     ).reset_index()
 
-    # Calculate ratios and spreads
     aggregated_df['Positive_Ratio'] = aggregated_df['pos_count'] / aggregated_df['Article_Count']
     aggregated_df['Negative_Ratio'] = aggregated_df['neg_count'] / aggregated_df['Article_Count']
     aggregated_df['Sentiment_Spread'] = aggregated_df['Positive_Ratio'] - aggregated_df['Negative_Ratio']
 
-    # Clean up temp columns
     aggregated_df = aggregated_df.drop(columns=['pos_count', 'neg_count'])
 
     return aggregated_df

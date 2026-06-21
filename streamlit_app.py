@@ -10,7 +10,7 @@ matplotlib.use("Agg")
 import numpy as np
 from datetime import date, timedelta
 
-from backend.gdelt_fetcher import fetch_gdelt_news
+from backend.rss_fetcher import fetch_rss_news
 from backend.sentiment import sentiment_analysis
 from backend.market_data import market_data
 from backend.normalize_labels import normalize_labels
@@ -516,11 +516,11 @@ with st.sidebar:
     ticker = st.selectbox("Stock Ticker", TICKERS,
                           format_func=lambda t: TICKER_LABELS[t], index=0)
 
-    # ── Automated 90-Day GDELT Window ──
+    # ── Automated 90-Day Window ──
     end_date = date.today()
     start_date = end_date - timedelta(days=90)
 
-    # Updated disclaimer card reflecting the GDELT integration
+    # Updated disclaimer card reflecting the pipeline configuration
     st.markdown(f"""
     <div style="background:{C['surface_container_lo']}; border: 1px solid {C['outline_variant']};
                 border-radius: 8px; padding: 8px 10px; margin-top: 6px; margin-bottom: 20px;">
@@ -529,31 +529,16 @@ with st.sidebar:
             {_icon('info', 14, C['tertiary'])} Pipeline Configuration
         </p>
         <ul style="font-size: 10px; color: {C['on_surface_variant']}; margin: 0; padding-left: 12px; line-height: 1.35; font-family: 'Inter', sans-serif;">
-            <li style="margin-bottom: 4px;"><strong>Automated Window:</strong> Analyzing historical volume from <strong>{start_date.strftime('%Y-%m-%d')}</strong> to <strong>{end_date.strftime('%Y-%m-%d')}</strong> (Rolling 90-Day GDELT Limit).</li>
+            <li style="margin-bottom: 4px;"><strong>Automated Window:</strong> Analyzing historical volume from <strong>{start_date.strftime('%Y-%m-%d')}</strong> to <strong>{end_date.strftime('%Y-%m-%d')}</strong> (Rolling 90-Day Limit).</li>
             <li><strong>Model Performance:</strong> FinBERT inference is batched. Processing times will vary depending on the historical news volume for the selected ticker.</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
 
-    run_btn = st.button("Run Analysis", key="run_analysis", use_container_width=True)
+    run_btn = st.button("Run Analysis", key="run_analysis", width="stretch")
 
-    # Warning card about hardcoded thresholds
     st.markdown(f"""
-    <div style="background:{C['error_container']}; border: 1px solid {C['error']};
-                border-radius: 8px; padding: 12px; margin-top: 14px; margin-bottom: 12px;">
-        <p style="font-size: 11px; font-weight: 700; color: {C['error']}; margin: 0 0 6px 0;
-                  display: flex; align-items: center; gap: 6px; font-family: 'Inter', sans-serif;">
-            {_icon('warning', 16, C['error'])} Model Notice
-        </p>
-        <p style="font-size: 11.5px; color: {C['on_surface_variant']}; margin: 0; line-height: 1.4; font-family: 'Inter', sans-serif;">
-            The model is currently running on hardcoded thresholds, which will affect accuracy. This will be updated in the future.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("---")
-    st.markdown(f"""
-    <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
         <details style="color:{C['on_surface_variant']};font-size:13px;font-weight:600;">
             <summary style="display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;outline:none;">
                 {_icon('contact_support', 18, C['on_surface_variant'])} Support
@@ -582,7 +567,7 @@ if run_btn:
     bar = st.progress(0, text="Initializing...")
     try:
         bar.progress(10, text="Fetching news articles...")
-        news_df = fetch_gdelt_news(ticker, str(start_date), str(end_date))
+        news_df = fetch_rss_news(ticker, str(start_date), str(end_date))
         if news_df.empty:
             st.error(f"No articles found for {ticker} between {start_date} and {end_date}. "
                      "Try a wider date range or a different ticker.")
@@ -780,7 +765,7 @@ def pg_overview():
             fig.add_hline(y=0, line_dash="dot", line_color=C["outline"], opacity=0.3)
             ly = _plotly_base(height=320); ly["showlegend"] = False
             fig.update_layout(**ly)
-            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
 
     with dn_col:
         with st.container(border=True):
@@ -805,7 +790,7 @@ def pg_overview():
                 annotations=[dict(
                     text=f"<b>{dominant_pct}%</b><br><span style='font-size:9px;color:{C['outline']}'>Dominant</span>",
                     x=0.5, y=0.5, font_size=22, font_family="Inter", font_color=C["on_surface"], showarrow=False)])
-            st.plotly_chart(fd, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fd, width="stretch", config={"displayModeBar": False})
 
             for lbl in labs:
                 clr = cmap.get(lbl, C["outline"]); pct = int(sc[lbl] / sum(vals) * 100)
@@ -986,7 +971,7 @@ def pg_analysis():
         ly["legend"] = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
                             font=dict(family="JetBrains Mono, monospace", size=10))
         fb.update_layout(**ly)
-        st.plotly_chart(fb, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fb, width="stretch", config={"displayModeBar": False})
 
     st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
 
@@ -1196,7 +1181,7 @@ def pg_reports():
             ly["legend"] = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
                                 font=dict(family="JetBrains Mono, monospace", size=10))
             fa.update_layout(**ly)
-            st.plotly_chart(fa, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fa, width="stretch", config={"displayModeBar": False})
 
     with tabs[1]:
         with st.container(border=True):
@@ -1214,7 +1199,7 @@ def pg_reports():
                              xaxis=dict(tickfont=dict(family="JetBrains Mono", size=11)),
                              yaxis=dict(tickfont=dict(family="JetBrains Mono", size=11)))
             fc.update_traces(textfont=dict(size=18, color="white", family="Inter"))
-            st.plotly_chart(fc, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fc, width="stretch", config={"displayModeBar": False})
 
     with tabs[2]:
         with st.container(border=True):
@@ -1238,7 +1223,7 @@ def pg_reports():
                     ly = _plotly_base(height=300); ly["showlegend"] = False
                     ly["xaxis"]["tickfont"] = dict(family="JetBrains Mono", size=11, color=C["on_surface"])
                     fg.update_layout(**ly)
-                    st.plotly_chart(fg, use_container_width=True, config={"displayModeBar": False})
+                    st.plotly_chart(fg, width="stretch", config={"displayModeBar": False})
 
     st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
 
@@ -1416,6 +1401,7 @@ def pg_financials():
         fig = go.Figure(data=[go.Bar(
             x=metric_names,
             y=metric_values,
+            width=0.35,
             marker=dict(color=bar_colors, cornerradius=6),
             text=[f"{v:+.2f}%" for v in metric_values],
             textposition="outside",
@@ -1423,11 +1409,11 @@ def pg_financials():
             hovertemplate="<b>%{x}</b><br>Value: %{y:+.2f}%<extra></extra>",
         )])
         fig.add_hline(y=0, line_dash="dot", line_color=C["outline"], opacity=0.5)
-        ly = _plotly_base(height=340)
+        ly = _plotly_base(height=240)
         ly["showlegend"] = False
         ly["yaxis"]["ticksuffix"] = "%"
         fig.update_layout(**ly)
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
 
     st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
 
