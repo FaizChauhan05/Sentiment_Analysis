@@ -495,7 +495,7 @@ with st.sidebar:
 
     page = st.radio(
         "Navigation",
-        ["Overview", "Analysis", "Mentions", "Reports", "Company Financials"],
+        ["Overview", "Analysis", "Mentions", "Reports", "Company Financials", "About"],
         label_visibility="collapsed",
         key="nav_page",
     )
@@ -1469,11 +1469,67 @@ def pg_financials():
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# PAGE 6 — ABOUT
+# ══════════════════════════════════════════════════════════════════════════════
+def pg_about():
+    st.markdown(_page_header(
+        "About", "About this Project",
+        "A simple overview of SentiCore's inner workings and purpose."),
+        unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.markdown(f"""
+        <h3 style="color:{C['primary']};margin-top:0px;font-family:'Inter',sans-serif;">What is SentiCore?</h3>
+        <p style="color:{C['on_surface_variant']};font-size:14px;line-height:1.6;font-family:'Inter',sans-serif;margin-bottom:0px;">
+            SentiCore is an analytical dashboard designed to show you the relationship between 
+            <strong>financial news sentiment</strong> (the positive or negative tone of articles) and 
+            <strong>stock price movements</strong>. 
+            Instead of manually guessing, it reads online news headlines, scores them using AI, 
+            and analyzes whether those news beats predicted how the stock actually behaved (going up, down, or remaining unchanged).
+        </p>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.markdown(f"""
+        <h3 style="color:{C['primary']};margin-top:0px;font-family:'Inter',sans-serif;">How Does it Work?</h3>
+        <p style="color:{C['on_surface_variant']};font-size:14px;line-height:1.6;font-family:'Inter',sans-serif;">
+            The app executes a simple 4-step workflow:
+        </p>
+        <ol style="color:{C['on_surface_variant']};font-size:14px;line-height:1.6;font-family:'Inter',sans-serif;padding-left:20px;margin-bottom:0px;">
+            <li style="margin-bottom:8px;">
+                <strong>News Fetching:</strong> We pull financial news headlines for your selected stock from Google News, Yahoo Finance, and Bing News.
+            </li>
+            <li style="margin-bottom:8px;">
+                <strong>AI Sentiment Scoring:</strong> We process each headline using <strong>FinBERT</strong> (an AI language model specifically tuned for financial text) to label it as Positive, Neutral, or Negative.
+            </li>
+            <li style="margin-bottom:8px;">
+                <strong>Predictive Machine Learning:</strong> SentiCore aggregates these daily sentiment scores, combines them with corporate financial metrics (such as EPS, Revenue Growth, and Debt-to-Equity), and uses a trained <strong>XGBoost Machine Learning model</strong> to predict the direction of the stock price.
+            </li>
+            <li style="margin-bottom:8px;">
+                <strong>Performance Evaluation:</strong> The app compares its predictions against actual stock price shifts (from Yahoo Finance) to calculate metrics like accuracy and display visual confusion heatmaps.
+            </li>
+        </ol>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.markdown(f"""
+        <h3 style="color:{C['primary']};margin-top:0px;font-family:'Inter',sans-serif;">Purpose of the Project</h3>
+        <p style="color:{C['on_surface_variant']};font-size:14px;line-height:1.6;font-family:'Inter',sans-serif;margin-bottom:0px;">
+            The main goal of SentiCore is to study the influence of news on financial markets. By bridging the gap between raw, unstructured news headlines and numerical market prices, this project demonstrates how modern machine learning models can capture investor sentiment and highlight its correlation with real-world trading trends.
+        </p>
+        """, unsafe_allow_html=True)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # ROUTER
 # ══════════════════════════════════════════════════════════════════════════════
 {"Overview": pg_overview, "Analysis": pg_analysis,
  "Mentions": pg_mentions, "Reports": pg_reports,
- "Company Financials": pg_financials}[page]()
+ "Company Financials": pg_financials, "About": pg_about}[page]()
 
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("---")
