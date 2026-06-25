@@ -59,8 +59,6 @@ Launch the Streamlit web interface locally:
 ```bash
 streamlit run streamlit_app.py
 ```
-View the dashboard in your browser at `http://localhost:8501`.
-
 ---
 
 ## Model Features (14 Input Features)
