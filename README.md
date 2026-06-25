@@ -4,6 +4,11 @@ An analytical machine learning dashboard that aggregates financial news headline
 
 [![Streamlit App](https://static.streamlit.io/badge_github_white.svg)](https://sentiment-analysis-finbertt.streamlit.app/)
 
+<img width="1371" height="1078" alt="Screenshot 2026-06-26 at 2 12 53 AM" src="https://github.com/user-attachments/assets/560519e8-6216-4fc1-8099-0df7b41122d8" /><img width="2065" height="1078" alt="Screenshot 2026-06-26 at 2 15 28 AM" src="https://github.com/user-attachments/assets/a17bc76f-51d2-4f77-b2be-95c438ba4b65" />
+<img width="2065" height="1078" alt="Screenshot 2026-06-26 at 2 15 22 AM" src="https://github.com/user-attachments/assets/f3b844f2-4440-4f6f-908b-8b3ac74cac16" />
+<img width="2065" height="1078" alt="Screenshot 2026-06-26 at 2 15 14 AM" src="https://github.com/user-attachments/assets/27a3c713-644c-48e9-9c54-6c555cad25de" />
+<img width="2065" height="1078" alt="Screenshot 2026-06-26 at 2 14 53 AM" src="https://github.com/user-attachments/assets/4db26618-4859-470c-9367-74f22f040083" />
+<img width="2065" height="1078" alt="Screenshot 2026-06-26 at 2 14 35 AM" src="https://github.com/user-attachments/assets/f068451c-a954-4864-86ac-f0c62e6269b6" />
 ---
 
 ## Key Features
@@ -54,8 +59,6 @@ Launch the Streamlit web interface locally:
 ```bash
 streamlit run streamlit_app.py
 ```
-View the dashboard in your browser at `http://localhost:8501`.
-
 ---
 
 ## Model Features (14 Input Features)
