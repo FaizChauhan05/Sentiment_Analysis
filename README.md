@@ -8,7 +8,6 @@ An analytical machine learning dashboard that aggregates financial news headline
 <img width="2065" height="1078" alt="Screenshot 2026-06-26 at 2 15 22 AM" src="https://github.com/user-attachments/assets/f3b844f2-4440-4f6f-908b-8b3ac74cac16" />
 <img width="2065" height="1078" alt="Screenshot 2026-06-26 at 2 15 14 AM" src="https://github.com/user-attachments/assets/27a3c713-644c-48e9-9c54-6c555cad25de" />
 <img width="2065" height="1078" alt="Screenshot 2026-06-26 at 2 14 53 AM" src="https://github.com/user-attachments/assets/4db26618-4859-470c-9367-74f22f040083" />
-<img width="2065" height="1078" alt="Screenshot 2026-06-26 at 2 14 35 AM" src="https://github.com/user-attachments/assets/11c89630-80e6-49e6-ad68-0e4eee06421c" />
 <img width="2065" height="1078" alt="Screenshot 2026-06-26 at 2 14 35 AM" src="https://github.com/user-attachments/assets/f068451c-a954-4864-86ac-f0c62e6269b6" />
 ---
 
