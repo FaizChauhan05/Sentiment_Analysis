@@ -12,4 +12,4 @@ jobs:
 
     steps:
       - name: Visit the URL using cURL
-        run: curl -sL -w "%{http_code}" "https://sentiment-analysis-finbertt.streamlit.app/" -o /dev/null
+        run: curl -sL -w "%{http_code}" "https://sentiment-analysis-finbertt.streamlit.app/" -o /dev/null || true
